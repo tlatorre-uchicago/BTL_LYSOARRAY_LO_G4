@@ -63,6 +63,7 @@ MyRunAction :: ~MyRunAction()
 
 void MyRunAction::BeginOfRunAction(const G4Run* run)
 {
+    /*
     G4UImanager *UImanager = G4UImanager::GetUIpointer();
 
     // Initialization of G4 random generator through computer time
@@ -74,6 +75,7 @@ void MyRunAction::BeginOfRunAction(const G4Run* run)
     G4cout<<command<< G4endl;
     G4double rand=G4UniformRand();  // Test of random number written to screen
     G4cout<<" Random number: " << rand << G4endl;
+    */
 
 
     G4AnalysisManager *man = G4AnalysisManager::Instance();
@@ -89,23 +91,26 @@ void MyRunAction::BeginOfRunAction(const G4Run* run)
 }
 void MyRunAction::EndOfRunAction(const G4Run*)
 {
-    G4UImanager *UImanager = G4UImanager::GetUIpointer();
+    //G4UImanager *UImanager = G4UImanager::GetUIpointer();
 
     // Modify random parameter in the geometry 
     //  #### This does nothing unless we do another run, the geometry can only be changed in between runs not events !!!
-    G4double GLUE_L = 0.05+0.1*G4UniformRand();   GLUE_L=GLUE_L/2.;
-    G4double RESIN_L =0.3 +0.4*G4UniformRand();   RESIN_L=RESIN_L/2.;
-    G4double XposTol = -0.15+G4UniformRand()*0.3;
-    G4double YposTol = -0.15+G4UniformRand()*0.3;
+    //G4double GLUE_L = 0.05+0.1*G4UniformRand();   GLUE_L=GLUE_L/2.;
+    //G4double RESIN_L =0.3 +0.4*G4UniformRand();   RESIN_L=RESIN_L/2.;
+    //G4double XposTol = -0.005+G4UniformRand()*0.01;
+    //G4double ZposTol = -0.005+G4UniformRand()*0.01;
 
+    /*
     command="/detector/GLUE_L " + std::to_string(GLUE_L);
     UImanager->ApplyCommand(command);  G4cout<< command << G4endl;
     command="/detector/RESIN_L " + std::to_string(RESIN_L);
     UImanager->ApplyCommand(command);  G4cout<< command << G4endl;
+    
     command="/detector/XposTol " + std::to_string(XposTol);
     UImanager->ApplyCommand(command);  G4cout<< command << G4endl;
-    command="/detector/YposTol " + std::to_string(YposTol);
+    command="/detector/ZposTol " + std::to_string(ZposTol);
     UImanager->ApplyCommand(command);  G4cout<< command << G4endl;
+    */
 
     // Close the output file for this event
     G4AnalysisManager *man = G4AnalysisManager::Instance();

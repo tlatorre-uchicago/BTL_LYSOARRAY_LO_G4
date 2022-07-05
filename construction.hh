@@ -51,18 +51,18 @@ private: // it is not accessed from outside
     G4LogicalVolume *logicDetector; // We need to refer to this volume. Needs to be outside of the construction.
 
     G4int nCols, nRows, GeomConfig, ESRtrue;
-    G4double LYSO_L, LYSO_YIELD, LYSO_SCALERESOLUTION, Vovcon, LYSO_thick, perincr;
+    G4double LYSO_L, TARGET_YIELD, LYSO_SCALERESOLUTION, Vovcon, LYSO_thick, perincr;
     virtual void ConstructSDandField(); // SD==Sensitive Detector
     G4GenericMessenger *fMessenger,*fMessenger_thick, *fMessenger_SR, *fMessenger_YIELD, *fMessenger_vov, *fMessenger_GlueL, *fMessenger_ResinL, *fMessenger_XPos, *fMessenger_YPos, *fMessenger_GC, *fMessenger_pi, *fMessenger_ESR;
 
-    G4Box *solidWorld, *solidDetector, *solidGlue, *solidResin, *solidFR4;
+    G4Box *solidWorld, *solidDetector, *solidGlue, *solidResin, *solidFR4, *solidTarget;
     G4UnionSolid *solidLYSO;
 
-    G4LogicalVolume *logicWorld, *logicLYSO, *logicGlue, *logicResin, *logicResin_Sub, *logicFR4;
+    G4LogicalVolume *logicWorld, *logicLYSO, *logicGlue, *logicResin, *logicResin_Sub, *logicFR4, *logicTarget;
 
-    G4VPhysicalVolume *physWorld, *physLYSO, *physDetector, *physGlue1, *physGlue2, *physResin1, *physResin2, *physFR41, *physFR42;
+    G4VPhysicalVolume *physWorld, *physLYSO, *physDetector, *physGlue1, *physGlue2, *physResin1, *physResin2, *physFR41, *physFR42, *physTarget;
 
-    G4Material *worldMat, *SiO2, *H2O, *Aerogel, *prelude, *scintillator,*NaI, *EPOXY, *RTV3145;
+    G4Material *worldMat, *SiO2, *H2O, *Aerogel, *prelude, *scintillator,*NaI, *EPOXY, *RTV3145, *WSi;
     G4Element *C,*Na,*I,*H,*O,*Si,*N,*Al;
 
     G4OpticalSurface *mirrorSurface, *groundSurface, *SurfFR4;

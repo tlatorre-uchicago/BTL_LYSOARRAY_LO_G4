@@ -14,6 +14,7 @@ MyPrimaryGenerator :: MyPrimaryGenerator()
         G4ThreeVector mom(0.,-1.,0.);
         fParticleGun->SetParticlePosition (pos);
         fParticleGun->SetParticleMomentumDirection (mom);
+        //fParticleGun->SetParticleMomentum (511. *keV);
         fParticleGun->SetParticleMomentum (511. *keV);
         fParticleGun->SetParticleDefinition(particle);
 
@@ -30,6 +31,7 @@ void MyPrimaryGenerator::GeneratePrimaries(G4Event *anEvent)
     G4ParticleDefinition *particle= fParticleGun->GetParticleDefinition();
 
     // Example for particle definition (not used in this executable)
+    /*
     if (particle == G4Geantino::Geantino())
     {
         // Cobalt particle
@@ -44,5 +46,6 @@ void MyPrimaryGenerator::GeneratePrimaries(G4Event *anEvent)
         fParticleGun->SetParticleCharge(charge);
 
     }
+    */
     fParticleGun->GeneratePrimaryVertex(anEvent);
 }
