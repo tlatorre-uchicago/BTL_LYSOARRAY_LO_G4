@@ -83,15 +83,20 @@ Arguments:
     -mn i Macroname.mac : repeat a macro file i times
     -o OutputName       : Desired Output name for the root files without file extension type
 
-Outputs: Root files per event number containing:
-    * Information on the photons that reach the detector
-    * Information on the photons that are detected
-    * General information on the LO per event
-    * Information on all photons killed
-        - Position where they where killed
+Outputs:
+
+Root files per event number containing:
+
+* Information on the photons that reach the detector
+* Information on the photons that are detected
+* General information on the LO per event
+* Information on all photons killed
+    - Position where they where killed
 
 
 Schematics of the code:
+
+```
     * sim.cc (main)
         ->  construction.*
             ->  detector.*
@@ -102,3 +107,4 @@ Schematics of the code:
             -> event.*
             -> stepping.*
             -> tracking.*
+```
