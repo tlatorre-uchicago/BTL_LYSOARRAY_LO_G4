@@ -57,6 +57,8 @@ Next, we build geant4 and ROOT:
 
     $ make install-deps
 
+Now, go grab a cup of coffee because it takes a long time to build geant4 and root!
+
 Finally, compile the software:
 
     $ make
