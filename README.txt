@@ -1,5 +1,5 @@
 LYSO bar/tile Simulation for BTL
-################################
+================================
 
 Author: Guillermo Reales
 Date: 08-Jun-2022
@@ -9,25 +9,25 @@ Summary
 
 This code generates different geometries of LYSO scintillators to estimate their Light Output (LO) with respect to the SiPM detectors.
 
+To compile the software, there are three different methods you can use:
+
+* singularity container
+* compile from source
+* use a pre-existing geant4/root installation on the Caltech Tier2 cluster
+
+The instructions for each of these methods is described below.
+
+Singularity Container
+---------------------
+
 The code is expected to work with the Singularity container that can be downloaded through the command: singularity pull library://grealesguti/test/test
 If this provides an error try the UNIQE ID as: singularity pull library:sha256.4fa8d22a3afd9f8ba6f20494e629965887344f672f5a3f726ad9b7160396ae4b
 The G4 version used is G4 v11.0.0
 
-An example of how to run within a cluster with HTcondor can be found in the folder "HTexample".
-
-How to compile in your machine
-------------------------------
-
-To compile on a local machine, you can either use a singularity container or
-compile things yourself. The instructions for each of these methods is
-described below.
-
-### Singularity Container
-
 * Follow the steps in the Yvideo -> https://www.youtube.com/watch?v=Lxb4WZyKeCE&list=PLLybgCU6QCGWgzNYOV0SKen9vqg4KXeVL
 	- Use G4 version 11.0.0
 
-How to run in your machine:
+How to run on your machine:
 * Download the Singularity Container stated above
 * Modify SingAction.sh for your Container folder
 * Create buildSing and buildSing/Results folder within the folder that contains this repository
@@ -35,7 +35,8 @@ How to run in your machine:
 * modify the run.mac file (These are the commands that will be executed by G4)
 * run the command: sh SingAction.sh
 
-### Building From Source for Fedora/CentOS/RHEL
+Building From Source for Fedora/CentOS/RHEL
+-------------------------------------------
 
 First, install some required dependencies to build Geant4 and ROOT:
 
@@ -49,7 +50,8 @@ Next, we build geant4 and ROOT:
 
     $ make install-deps
 
-### How to run in TierII
+How to run on TierII
+--------------------
 
 * download the repository in a new folder in your node
 * create a Results folder
@@ -58,6 +60,11 @@ Next, we build geant4 and ROOT:
 * modify the run.mac file (These are the commands that will be executed by G4)
 * modify the G4SimScriptCVMFS.sh if required
 * run G4SimScriptCVMFS.sh
+
+An example of how to run within a cluster with HTcondor can be found in the folder "HTexample".
+
+Running the code
+----------------
 
 Arguments:
 
