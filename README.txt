@@ -21,8 +21,14 @@ The instructions for each of these methods is described below.
 Singularity Container
 ---------------------
 
-The code is expected to work with the Singularity container that can be downloaded through the command: singularity pull library://grealesguti/test/test
-If this provides an error try the UNIQE ID as: singularity pull library:sha256.4fa8d22a3afd9f8ba6f20494e629965887344f672f5a3f726ad9b7160396ae4b
+The code is expected to work with the Singularity container that can be downloaded through the command:
+
+    $ singularity pull library://grealesguti/test/test
+
+If this provides an error try the UNIQE ID as:
+
+    $ singularity pull library:sha256.4fa8d22a3afd9f8ba6f20494e629965887344f672f5a3f726ad9b7160396ae4b
+
 The G4 version used is G4 v11.0.0
 
 * Follow the steps in the Yvideo -> https://www.youtube.com/watch?v=Lxb4WZyKeCE&list=PLLybgCU6QCGWgzNYOV0SKen9vqg4KXeVL
@@ -50,6 +56,10 @@ Note that depending on your exact version, some of the names of the above progra
 Next, we build geant4 and ROOT:
 
     $ make install-deps
+
+Finally, compile the software:
+
+    $ make
 
 How to run on TierII
 --------------------
@@ -92,6 +102,3 @@ Schematics of the code:
             -> event.*
             -> stepping.*
             -> tracking.*
-
-
-
