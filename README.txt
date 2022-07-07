@@ -77,13 +77,13 @@ An example of how to run within a cluster with HTcondor can be found in the fold
 Running the code
 ----------------
 
-Arguments:
+### Arguments
 
     -m Macroname.mac    : run one time a macro file
     -mn i Macroname.mac : repeat a macro file i times
     -o OutputName       : Desired Output name for the root files without file extension type
 
-Outputs:
+### Outputs
 
 Root files per event number containing:
 
@@ -94,17 +94,17 @@ Root files per event number containing:
     - Position where they where killed
 
 
-Schematics of the code:
+### Schematics of the code
 
 ```
-    * sim.cc (main)
-        ->  construction.*
-            ->  detector.*
-        ->  physics.*
-        ->  action.*
-            -> generator.*
-            -> run.*
-            -> event.*
-            -> stepping.*
-            -> tracking.*
+* sim.cc (main)
+    ->  construction.*
+        ->  detector.*
+    ->  physics.*
+    ->  action.*
+        -> generator.*
+        -> run.*
+        -> event.*
+        -> stepping.*
+        -> tracking.*
 ```
