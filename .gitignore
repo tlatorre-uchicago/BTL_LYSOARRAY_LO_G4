@@ -6,4 +6,4 @@
 temp/
 # ignore ALL files in the build directory
 buildSing/
-
+*.swp
