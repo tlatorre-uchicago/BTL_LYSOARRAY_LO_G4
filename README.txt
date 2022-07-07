@@ -2,6 +2,7 @@ LYSO bar/tile Simulation for BTL
 ================================
 
 Author: Guillermo Reales
+
 Date: 08-Jun-2022
 
 Summary
@@ -56,7 +57,7 @@ How to run on TierII
 * download the repository in a new folder in your node
 * create a Results folder
 * run Geant4SourceCVMFS.sh
-* run the Makefile
+* run the Makefile (`make -f Makefile.tier2`)
 * modify the run.mac file (These are the commands that will be executed by G4)
 * modify the G4SimScriptCVMFS.sh if required
 * run G4SimScriptCVMFS.sh
