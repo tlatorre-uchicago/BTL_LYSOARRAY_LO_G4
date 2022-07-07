@@ -53,11 +53,21 @@ First, install some required dependencies to build Geant4 and ROOT:
 
 Note that depending on your exact version, some of the names of the above programs may change slightly.
 
-Next, we build geant4 and ROOT. You can build these yourself by following the instructions at [https://geant4-userdoc.web.cern.ch/UsersGuides/InstallationGuide/html/installguide.html](https://geant4-userdoc.web.cern.ch/UsersGuides/InstallationGuide/html/installguide.html) and [https://root.cern/install/](https://root.cern/install/) (remember to source the shell files after!), or you can simply type:
+Next, we build geant4 and ROOT. You can build these yourself by following the instructions at [here](https://geant4-userdoc.web.cern.ch/UsersGuides/InstallationGuide/html/installguide.html) and [here](https://root.cern/install/) (remember to source the shell files after!), or you can simply type:
 
     $ make install-deps
 
 Now, go grab a cup of coffee because it takes a long time to build geant4 and root!
+
+Afterwards, run:
+
+    $ source ./geant4.10.07.p03/geant4-install/bin/geant4.sh
+    $ source ./root-v6.24.04/root-install/bin/thisroot.sh
+
+Finally, add these lines to your .bashrc script:
+
+    $ echo "source ./geant4.10.07.p03/geant4-install/bin/geant4.sh" >> ~/.bashrc
+    $ echo "source ./root-v6.24.04/root-install/bin/thisroot.sh" >> ~/.bashrc
 
 Finally, compile the software:
 
