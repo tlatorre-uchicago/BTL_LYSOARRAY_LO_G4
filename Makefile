@@ -18,7 +18,7 @@ sim: action.o construction.o detector.o event.o generator.o physics.o run.o sim.
 geant4:
 	test ! -f rm -f geant4.10.07.p03.tar.gz && \
 	curl -O -L http://cern.ch/geant4-data/releases/geant4.10.07.p03.tar.gz && \
-	tar -xzvf geant4.10.07.p03.tar.gz; true
+	tar -xzvf geant4.10.07.p03.tar.gz || true
 	cd geant4.10.07.p03 && \
 	mkdir -p geant4-build && \
 	mkdir -p geant4-install && \
@@ -30,7 +30,7 @@ geant4:
 root:
 	test ! -f root_v6.26.04.source.tar.gz && \
 	curl -O -L https://root.cern/download/root_v6.26.04.source.tar.gz && \
-	tar -xzvf root_v6.26.04.source.tar.gz; true
+	tar -xzvf root_v6.26.04.source.tar.gz || true
 	cd root-6.26.04 && \
 	mkdir -p root-build && \
 	mkdir -p root-install && \
