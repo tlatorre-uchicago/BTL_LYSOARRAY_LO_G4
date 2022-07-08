@@ -1,1 +1,2 @@
-/run/beamOn 1000
+/vis/viewer/set/viewpointVector 1 0 0
+/run/beamOn 100
