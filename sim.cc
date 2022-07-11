@@ -38,7 +38,7 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
                 }
         }
 
-    if (Oin == 0 ) {  OutName = "WhateverTestName";   }
+    if (Oin == 0 ) {  OutName = "DetectorOutside";   }
 
     runManager -> SetUserInitialization(new MyActionInitialization(OutName)); /*Define actions*/
 
@@ -107,12 +107,16 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
   
   G4UImanager *UImanager = G4UImanager::GetUIpointer();
   
+  /*
   UImanager->ApplyCommand("/vis/open OGL");
   UImanager->ApplyCommand("/vis/viewer/set/viewpointVector 1 1 1");
   UImanager->ApplyCommand("/vis/drawVolume");
   UImanager->ApplyCommand("/vis/viewer/set/autoRefresh");
   UImanager->ApplyCommand("/vis/scene/add/trajectories smooth");
   UImanager->ApplyCommand("/vis/scene/endOfEventAction accumulate");
+  */
+  
+  UImanager->ApplyCommand("/control/loop energy_plot.mac Amp 0. 10. 2.");
   
   ui->SessionStart();
     }

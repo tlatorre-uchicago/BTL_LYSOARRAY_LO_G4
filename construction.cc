@@ -228,10 +228,12 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
 //////////////////////
 // PHYSICAL VOLUMES // G4PVPlacement(rotation,translation,logic_,"var",motherVolume,boolean,index if rep,check overlap);    
 //////////////////////
-
+    G4double dety = -0.02*m;
+    G4double spacing = 0.1*mm;
+    
     physWorld = new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicWorld,"physWorld",0,false,0,true);
-    physDetector = new G4PVPlacement(0,G4ThreeVector(0., -0.02*m-4.7*nm/2-0.625*mm/2, 0.),logicDetector,"physDetector",logicWorld,false,1,true); 
-    physTarget = new G4PVPlacement(0, G4ThreeVector(0., -0.02*m, 0.), logicTarget, "physTarget", logicWorld, false, 2, true);
+    physDetector = new G4PVPlacement(0,G4ThreeVector(0., dety-4.7*nm/2-0.625*mm/2-spacing, 0.),logicDetector,"physDetector",logicWorld,false,1,true); 
+    physTarget = new G4PVPlacement(0, G4ThreeVector(0., dety, 0.), logicTarget, "physTarget", logicWorld, false, 2, true);
 
 
     ConstructSDandField();
