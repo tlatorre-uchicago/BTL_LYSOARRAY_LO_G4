@@ -71,7 +71,7 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
                 }
         }*/
         for (int j = 1; j < argc; j=j+1){
-                G4cout<< to_string(j)<< " INPUT: " << argv[j]<<G4endl;
+                G4cout<< std::to_string(j)<< " INPUT: " << argv[j]<<G4endl;
                 if(strcmp(argv[j],"-mn")==0)
                 {   //G4cout<< "INSIDE IF"<<G4endl;
                     G4String command = "/control/execute ";  

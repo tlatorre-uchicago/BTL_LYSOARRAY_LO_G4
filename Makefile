@@ -16,10 +16,10 @@ Makefile.dep:
 sim: action.o construction.o detector.o event.o generator.o physics.o run.o sim.o stepping.o tracking.o
 
 geant4:
-	test ! -f rm -f geant4.10.07.p03.tar.gz && \
-	curl -O -L http://cern.ch/geant4-data/releases/geant4.10.07.p03.tar.gz && \
-	tar -xzvf geant4.10.07.p03.tar.gz || true
-	cd geant4.10.07.p03 && \
+	test ! -f rm -f geant4-v11.0.2.tar.gz && \
+	curl -O -L http://cern.ch/geant4-data/releases/geant4-v11.0.2.tar.gz && \
+	tar -xzvf geant4-v11.0.2.tar.gz || true
+	cd geant4-v11.0.2 && \
 	mkdir -p geant4-build && \
 	mkdir -p geant4-install && \
 	cd geant4-build && \
@@ -41,7 +41,7 @@ root:
 
 
 install-deps: geant4 root
-	@echo "Make sure to add the line source $(PWD)/geant4.10.07.p03/geant-install/bin/geant4.sh to your ~/.bashrc file!"
+	@echo "Make sure to add the line source $(PWD)/geant4-v11.0.2/geant4-install/bin/geant4.sh to your ~/.bashrc file!"
 	@echo "Make sure to add the line source $(PWD)/root-6.26.04/root-install/bin/thisroot.sh to your ~/.bashrc file!"
 
 install:
