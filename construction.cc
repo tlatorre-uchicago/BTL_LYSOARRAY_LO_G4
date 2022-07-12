@@ -1,4 +1,5 @@
 #include "construction.hh"
+#include "util.hh"
 
 MyDetectorConstruction::MyDetectorConstruction(MyG4Args* MainArgs)
 {// constructor
@@ -12,45 +13,58 @@ MyDetectorConstruction::MyDetectorConstruction(MyG4Args* MainArgs)
 MyDetectorConstruction::~MyDetectorConstruction()
 {}
 
-void MyDetectorConstruction::DefineMaterial() // function to define a single time the materials when parametrizing, materials need to be defined in the class header! Definition of the function for the class::
+/* Function to define a single time the materials when parametrizing, materials
+ * need to be defined in the class header! Definition of the function for the
+ * class */
+void MyDetectorConstruction::DefineMaterial()
 {
-/////////////
-//Materials//
-/////////////
+    /////////////
+    //Materials//
+    /////////////
+
     // import nist material data
     G4NistManager *nist = G4NistManager::Instance();
 
     // Find material in G4 database: Air
-    worldMat = nist -> FindOrBuildMaterial("G4_AIR");
-        // Material requirements for Cherenkov light
-    G4double energyWorld[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};   // Calculate momentum from wavelength [0.2,0.9]nm to energy
-    G4double rindexWorld[2] ={1.0, 1.0};                          // Define Refractive index for aerogel (constant, without dispersion in this case)
+    worldMat = nist->FindOrBuildMaterial("G4_AIR");
+    /* Set the refractive index of air. The refractive index is defined by
+     * giving a list of photon energies and their corresponding refractive
+     * index. Here, we want to set a constant refractive index, so we just
+     * define the array as starting from 200 nm (6.199 eV) to 900 nm (1.378 eV)
+     * and the refractive index for both to 1. */
+    G4double energyWorld[2] = {6.199*eV,1.378*eV};
+    G4double rindexWorld[2] ={1.0, 1.0};
         //Refer material properties to material 
     G4MaterialPropertiesTable *mptWorld = new G4MaterialPropertiesTable();
-    mptWorld->AddProperty("RINDEX", energyWorld, rindexWorld, 2);    // AddProperty("Mat Prop name", energy, values, num points)
+    /* Set the material properties table. The syntax is:
+     *
+     *     AddProperty("Mat Prop name", energy, values, num points)
+     *
+     */
+    mptWorld->AddProperty("RINDEX", energyWorld, rindexWorld, 2);
     worldMat->SetMaterialPropertiesTable(mptWorld);
 
-    // Define material class: SiO2 -> G4Material (name, density, number of components)
+    /* Define SiO2 material. This is one of the material used to make printed
+     * circuit boards (PCBs).
+     *
+     * G4Material is called like:
+     *
+     *     G4Material(name, density, number of components)
+     *
+     * In this case, the density is 2.201 g/cm^3 and it has two elements. */
     SiO2 = new G4Material("SiO2", 2.201*g/cm3, 2);
-    SiO2 -> AddElement(nist->FindOrBuildElement("Si"),1);
-    SiO2 -> AddElement(nist->FindOrBuildElement("O"),2);
+    SiO2->AddElement(nist->FindOrBuildElement("Si"),1);
+    SiO2->AddElement(nist->FindOrBuildElement("O"),2);
     G4MaterialPropertiesTable *mptSiO2 = new G4MaterialPropertiesTable();
-    G4double energySiO2[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};
-    G4double rindexSiO2[2] ={1.4585,1.4585};  
-    G4double ABSSiO2[2] ={0.01*mm,0.01*mm};  
-    mptSiO2->AddProperty("RINDEX", energySiO2, rindexSiO2, 2);    // AddProperty("Mat Prop name", energy, values, num points)
+    G4double energySiO2[2] = {6.199*eV,1.378*eV};
+    G4double rindexSiO2[2] = {1.4585, 1.4585};
+    /* Set the absorption length. Since optical light doesn't pass through
+     * PCBs, we just set it to 10 microns. */
+    G4double ABSSiO2[2] = {0.01*mm,0.01*mm};  
+    mptSiO2->AddProperty("RINDEX", energySiO2, rindexSiO2, 2);
     mptSiO2->AddProperty("ABSLENGTH", energySiO2, ABSSiO2,2);
     SiO2->SetMaterialPropertiesTable(mptSiO2);
 
-
-    // Define material class: Water -> G4Material (name, density, number of components)
-    H2O = new G4Material("H2O", 1.000*g/cm3, 2);
-    H2O -> AddElement(nist->FindOrBuildElement("H"),2);
-    H2O -> AddElement(nist->FindOrBuildElement("O"),1);
-
-    // Define Element class: Carbon -> element
-    C = nist->FindOrBuildElement("C");
-   
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // LYSO  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,17 +78,17 @@ void MyDetectorConstruction::DefineMaterial() // function to define a single tim
     prelude->AddElement(nist->FindOrBuildElement("O"), 18.8850049*perCent);
     prelude->AddElement(nist->FindOrBuildElement("Y"), 8.3954618*perCent);
     
-    G4double Cecont =0.0019;
+    G4double Cecont = 0.0019;
     scintillator = new G4Material("scintillator", prelude_density ,2);
     scintillator->AddMaterial(prelude,(100-Cecont*100)*perCent);
     scintillator->AddElement(nist->FindOrBuildElement("Ce"), (Cecont*100)*perCent);
 
     const G4int num = 32;
-    G4double LYSO_ene[num]   =  {1.5*eV, 2.*eV ,  2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV,  2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV ,  3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV, 5*eV};
+    G4double LYSO_ene[num] = {1.5*eV, 2.*eV , 2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV, 2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV , 3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV, 5*eV};
 
-    G4double LYSO_fast[num]  =  {0.0005, 0.00547041 , 0.00742609 , 0.00928865 , 0.01118718,  0.01389001,  0.01719669,  0.0213541,   0.02886363,  0.04151549,  0.06495384,  0.10380228,  0.16436757,  0.24529401,  0.34573305,  0.45515023,  0.56162549,  0.66179016,  0.77098452,  0.88530138,  0.97313946,  0.99724079,  0.97220698,  0.85723693,  0.65925813,  0.41169552,  0.13144243,  0.02564552,  0.01029099,  0.0040628,  0.00198485 ,0.0002};
+    G4double LYSO_fast[num] = {0.0005, 0.00547041 , 0.00742609 , 0.00928865 , 0.01118718, 0.01389001, 0.01719669, 0.0213541, 0.02886363, 0.04151549, 0.06495384, 0.10380228, 0.16436757, 0.24529401, 0.34573305, 0.45515023, 0.56162549, 0.66179016, 0.77098452, 0.88530138, 0.97313946, 0.99724079, 0.97220698, 0.85723693, 0.65925813, 0.41169552, 0.13144243, 0.02564552, 0.01029099, 0.0040628, 0.00198485 ,0.0002};
     
-    G4double LYSO_absv2[num]   =  {3100.12030366*mm,3043.12030366*mm, 2910.82651214*mm, 2784.92853358*mm, 2673.18826225*mm,
+    G4double LYSO_absv2[num] = {3100.12030366*mm,3043.12030366*mm, 2910.82651214*mm, 2784.92853358*mm, 2673.18826225*mm,
        2558.74171563*mm, 2434.67018908*mm, 2309.29098197*mm, 2174.98328362*mm,
        2040.58925841*mm, 1905.69079561*mm, 1770.63093617*mm, 1634.75136156*mm,
        1500.22714282*mm, 1368.97382295*mm, 1237.431274  *mm, 1105.49166167*mm,
@@ -86,19 +100,28 @@ void MyDetectorConstruction::DefineMaterial() // function to define a single tim
     G4double LYSO_r[num] =  {1.82,1.8200522,  1.82135278, 1.82265335, 1.82395392, 1.8252545,  1.82655507, 1.82785564, 1.82915621, 1.83045679, 1.83175736, 1.83305793, 1.8343585, 1.83565908, 1.83695965, 1.83826022, 1.8395608,  1.84086137, 1.84216194, 1.84346251, 1.84476309, 1.84606366, 1.84736423, 1.84866481, 1.84996538, 1.85126595, 1.85256652, 1.8538671,  1.85516767, 1.85646824, 1.85776882,1.86};
 
     G4double LYSO_scat[num] = {234.45212959*mm,234.45212959*mm, 227.68020394*mm, 221.23075095*mm, 215.08127251*mm, 209.21131583*mm, 203.6022461*mm,  198.23704898*mm, 193.08232197*mm, 188.33697299*mm, 183.67040027*mm, 179.27354488*mm, 174.97463851*mm, 170.85134353*mm, 166.91194186*mm, 163.09853917*mm, 159.42071546*mm, 155.88459404*mm, 152.46136681*mm, 149.16145631*mm, 146.04064832*mm, 142.88372645*mm, 139.96618158*mm, 137.03682031*mm, 134.27498273*mm, 131.74895681*mm,  129.02110085*mm, 126.41169996*mm, 123.94680927*mm, 121.54959211*mm, 119.27852085*mm,119.27852085*mm};
-G4MaterialPropertiesTable *mptScint= new G4MaterialPropertiesTable();
 
-  
-  mptScint->AddProperty("RINDEX", LYSO_ene, LYSO_r,num);
-  mptScint->AddProperty("SCINTILLATIONCOMPONENT1", LYSO_ene, LYSO_fast,num);
-  mptScint->AddProperty("ABSLENGTH", LYSO_ene, LYSO_absv2,num);
-  mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);/*Word data check*/
-  mptScint->AddProperty("RAYLEIGH", LYSO_ene, LYSO_scat,num);
-  mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION);/*10%*/
-  mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 39.1 * ns);
-  mptScint->AddConstProperty("SCINTILLATIONYIELD1", LYSO_SC1);/*the fraction of photons in each component must be specified, all to component 1*/
-  mptScint->AddConstProperty("SCINTILLATIONRISETIME1", LYSO_RT1 * ps);
-  scintillator-> SetMaterialPropertiesTable(mptScint);
+    G4MaterialPropertiesTable *mptScint= new G4MaterialPropertiesTable();
+
+    G4double lyso_rindex_ene[1000], lyso_rindex_values[1000];
+
+    int n = read_tsv_file("lyso_rindex.dat", lyso_rindex_ene, lyso_rindex_values, eV, 1);
+
+    if (n == -1) {
+        fprintf(stderr, "error reading lyso_rindex.dat!\n");
+        exit(1);
+    }
+
+    mptScint->AddProperty("RINDEX", lyso_rindex_ene, lyso_rindex_values, n);
+    mptScint->AddProperty("SCINTILLATIONCOMPONENT1", LYSO_ene, LYSO_fast,num);
+    mptScint->AddProperty("ABSLENGTH", LYSO_ene, LYSO_absv2,num);
+    mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);/*Word data check*/
+    mptScint->AddProperty("RAYLEIGH", LYSO_ene, LYSO_scat,num);
+    mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION);/*10%*/
+    mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 39.1 * ns);
+    mptScint->AddConstProperty("SCINTILLATIONYIELD1", LYSO_SC1);/*the fraction of photons in each component must be specified, all to component 1*/
+    mptScint->AddConstProperty("SCINTILLATIONRISETIME1", LYSO_RT1 * ps);
+    scintillator-> SetMaterialPropertiesTable(mptScint);
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // RTV3145  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
