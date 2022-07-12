@@ -43,33 +43,6 @@ int read_tsv_file(const char *filename, double *energy, double *values, double x
 
     i = 0;
     n = 0;
-    /* For the first pass, we just count how many values there are. */
-    while (fgets(line, sizeof(line), f)) {
-        size_t len = strlen(line);
-        if (len && (line[len-1] != '\n')) {
-            fprintf(stderr, "got incomplete line on line %i: '%s'\n", i, line);
-            goto err;
-        }
-
-        i += 1;
-
-        if (!len) continue;
-        else if (line[0] == '#') continue;
-
-        str = strtok(line," \n");
-
-        while (str) {
-            value = strtod(str, NULL);
-            str = strtok(NULL," \n");
-        }
-
-        n += 1;
-    }
-
-    i = 0;
-    n = 0;
-    /* Now, we actually store the values. */
-    rewind(f);
     while (fgets(line, sizeof(line), f)) {
         size_t len = strlen(line);
         if (len && (line[len-1] != '\n')) {
@@ -99,7 +72,8 @@ int read_tsv_file(const char *filename, double *energy, double *values, double x
             str = strtok(NULL," \n");
         }
 
-        n += 1;
+        if (j > 1)
+            n += 1;
     }
 
     fclose(f);
