@@ -33,8 +33,8 @@ void MyDetectorConstruction::DefineMaterial()
      * index. Here, we want to set a constant refractive index, so we just
      * define the array as starting from 200 nm (6.199 eV) to 900 nm (1.378 eV)
      * and the refractive index for both to 1. */
-    G4double energyWorld[2] = {6.199*eV,1.378*eV};
-    G4double rindexWorld[2] ={1.0, 1.0};
+    G4double energyWorld[2] = {1.378*eV, 6.199*eV};
+    G4double rindexWorld[2] = {1.0, 1.0};
         //Refer material properties to material 
     G4MaterialPropertiesTable *mptWorld = new G4MaterialPropertiesTable();
     /* Set the material properties table. The syntax is:
@@ -57,13 +57,13 @@ void MyDetectorConstruction::DefineMaterial()
     SiO2->AddElement(nist->FindOrBuildElement("Si"),1);
     SiO2->AddElement(nist->FindOrBuildElement("O"),2);
     G4MaterialPropertiesTable *mptSiO2 = new G4MaterialPropertiesTable();
-    G4double energySiO2[2] = {6.199*eV,1.378*eV};
+    G4double energySiO2[2] = {1.378*eV, 6.199*eV};
     G4double rindexSiO2[2] = {1.4585, 1.4585};
     /* Set the absorption length. Since optical light doesn't pass through
      * PCBs, we just set it to 10 microns. */
-    G4double ABSSiO2[2] = {0.01*mm,0.01*mm};  
+    G4double ABSSiO2[2] = {0.01*mm, 0.01*mm};
     mptSiO2->AddProperty("RINDEX", energySiO2, rindexSiO2, 2);
-    mptSiO2->AddProperty("ABSLENGTH", energySiO2, ABSSiO2,2);
+    mptSiO2->AddProperty("ABSLENGTH", energySiO2, ABSSiO2, 2);
     SiO2->SetMaterialPropertiesTable(mptSiO2);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ void MyDetectorConstruction::DefineMaterial()
     }
 
     mptScint->AddProperty("ABSLENGTH", lyso_absorption_length_ene, lyso_absorption_length_values, n);
-    mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);/*Word data check*/
+    mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);
 
     G4double lyso_scattering_length_ene[1000], lyso_scattering_length_values[1000];
 

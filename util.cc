@@ -5,6 +5,27 @@
 #include <stdlib.h>
 #include <math.h>
 
+/* Read in data from a tab or space separated file with two columns. `filename`
+ * should be the tsv file. `energy` and `values` should be double arrays big
+ * enough to hold all the values. The values in the first column are multiplied
+ * by `xunit` and the values in the second column are multiplied by `yunit`.
+ *
+ * Returns -1 on error and the number of rows in the file on success.
+ *
+ * Example:
+ *
+ *     G4double lyso_rindex_ene[1000], lyso_rindex_values[1000];
+ *
+ *     n = read_tsv_file("lyso_rindex.dat", lyso_rindex_ene, lyso_rindex_values, eV, 1);
+ *
+ *     if (n == -1) {
+ *         fprintf(stderr, "error reading lyso_rindex.dat!\n");
+ *         exit(1);
+ *     }
+ *
+ *     mptScint->AddProperty("RINDEX", lyso_rindex_ene, lyso_rindex_values, n);
+ *
+ */
 int read_tsv_file(const char *filename, double *energy, double *values, double xunit, double yunit)
 {
     int i, j;
