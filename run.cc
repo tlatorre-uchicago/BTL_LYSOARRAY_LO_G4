@@ -56,6 +56,13 @@ MyRunAction :: MyRunAction(G4String OutName)
             man->CreateNtupleDColumn("fY");
             man->CreateNtupleDColumn("fZ");
             man->FinishNtuple(3); // Finish our first tuple or Ntuple number 0
+            
+        // Tuple containing gamma momentum
+            /*
+            man->CreateNtuple("Momentum", "Momentum");
+            man->CreateNtupleDColumn("fMomentum");
+            man->FinishNtuple(4);
+            */
 
 }
 MyRunAction :: ~MyRunAction()

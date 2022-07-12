@@ -11,6 +11,7 @@
 #include "G4VisManager.hh"
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
+//#include "G4AnalysisManager.hh"
 
 /*Simulation created files*/
 #include "construction.hh"
@@ -116,9 +117,9 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
   UImanager->ApplyCommand("/vis/scene/endOfEventAction accumulate");
   */
   
-  UImanager->ApplyCommand("/control/loop energy_plot.mac Amp 1. 5. 2.");
+  UImanager->ApplyCommand("/control/loop energy_plot.mac Amp 1. 1000. 1.");
   
-  ui->SessionStart();
+  //ui->SessionStart();
     }
 
 
