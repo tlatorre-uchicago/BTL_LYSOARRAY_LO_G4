@@ -117,7 +117,7 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
   UImanager->ApplyCommand("/vis/scene/endOfEventAction accumulate");
   */
   
-  UImanager->ApplyCommand("/control/loop energy_plot.mac Amp 1. 1000. 1.");
+  UImanager->ApplyCommand("/control/loop myRun.mac Amp 2. 3. 0.005");
   
   //ui->SessionStart();
     }

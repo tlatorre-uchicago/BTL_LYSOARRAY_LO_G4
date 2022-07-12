@@ -93,7 +93,7 @@ void MyRunAction::BeginOfRunAction(const G4Run* run)
     strRunID << runID;
 
     // Creation of Output file
-    man->OpenFile("./Results/detector_outside/"+OutputName+strRunID.str()+".root");
+    man->OpenFile("./Results/detector_outside_units/"+OutputName+strRunID.str()+".root");
 
 }
 void MyRunAction::EndOfRunAction(const G4Run*)
