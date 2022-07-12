@@ -18,6 +18,7 @@ MyDetectorConstruction::~MyDetectorConstruction()
  * class */
 void MyDetectorConstruction::DefineMaterial()
 {
+    int n;
     /////////////
     //Materials//
     /////////////
@@ -83,29 +84,11 @@ void MyDetectorConstruction::DefineMaterial()
     scintillator->AddMaterial(prelude,(100-Cecont*100)*perCent);
     scintillator->AddElement(nist->FindOrBuildElement("Ce"), (Cecont*100)*perCent);
 
-    const G4int num = 32;
-    G4double LYSO_ene[num] = {1.5*eV, 2.*eV , 2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV, 2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV , 3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV, 5*eV};
-
-    G4double LYSO_fast[num] = {0.0005, 0.00547041 , 0.00742609 , 0.00928865 , 0.01118718, 0.01389001, 0.01719669, 0.0213541, 0.02886363, 0.04151549, 0.06495384, 0.10380228, 0.16436757, 0.24529401, 0.34573305, 0.45515023, 0.56162549, 0.66179016, 0.77098452, 0.88530138, 0.97313946, 0.99724079, 0.97220698, 0.85723693, 0.65925813, 0.41169552, 0.13144243, 0.02564552, 0.01029099, 0.0040628, 0.00198485 ,0.0002};
-    
-    G4double LYSO_absv2[num] = {3100.12030366*mm,3043.12030366*mm, 2910.82651214*mm, 2784.92853358*mm, 2673.18826225*mm,
-       2558.74171563*mm, 2434.67018908*mm, 2309.29098197*mm, 2174.98328362*mm,
-       2040.58925841*mm, 1905.69079561*mm, 1770.63093617*mm, 1634.75136156*mm,
-       1500.22714282*mm, 1368.97382295*mm, 1237.431274  *mm, 1105.49166167*mm,
-        974.3012427 *mm,  843.12436693*mm,  707.75698288*mm,  574.16698216*mm,
-        445.00515572*mm,  317.14663428*mm,  158.48142788*mm,   49.44703917*mm,
-         13.05239972*mm,    5.72851208*mm,    3.75039458*mm,    3.30181138*mm,
-          3.13218799*mm,    3.04577151*mm,3.*mm};
-
-    G4double LYSO_r[num] =  {1.82,1.8200522,  1.82135278, 1.82265335, 1.82395392, 1.8252545,  1.82655507, 1.82785564, 1.82915621, 1.83045679, 1.83175736, 1.83305793, 1.8343585, 1.83565908, 1.83695965, 1.83826022, 1.8395608,  1.84086137, 1.84216194, 1.84346251, 1.84476309, 1.84606366, 1.84736423, 1.84866481, 1.84996538, 1.85126595, 1.85256652, 1.8538671,  1.85516767, 1.85646824, 1.85776882,1.86};
-
-    G4double LYSO_scat[num] = {234.45212959*mm,234.45212959*mm, 227.68020394*mm, 221.23075095*mm, 215.08127251*mm, 209.21131583*mm, 203.6022461*mm,  198.23704898*mm, 193.08232197*mm, 188.33697299*mm, 183.67040027*mm, 179.27354488*mm, 174.97463851*mm, 170.85134353*mm, 166.91194186*mm, 163.09853917*mm, 159.42071546*mm, 155.88459404*mm, 152.46136681*mm, 149.16145631*mm, 146.04064832*mm, 142.88372645*mm, 139.96618158*mm, 137.03682031*mm, 134.27498273*mm, 131.74895681*mm,  129.02110085*mm, 126.41169996*mm, 123.94680927*mm, 121.54959211*mm, 119.27852085*mm,119.27852085*mm};
-
-    G4MaterialPropertiesTable *mptScint= new G4MaterialPropertiesTable();
+    G4MaterialPropertiesTable *mptScint = new G4MaterialPropertiesTable();
 
     G4double lyso_rindex_ene[1000], lyso_rindex_values[1000];
 
-    int n = read_tsv_file("lyso_rindex.dat", lyso_rindex_ene, lyso_rindex_values, eV, 1);
+    n = read_tsv_file("lyso_rindex.dat", lyso_rindex_ene, lyso_rindex_values, eV, 1);
 
     if (n == -1) {
         fprintf(stderr, "error reading lyso_rindex.dat!\n");
@@ -113,13 +96,44 @@ void MyDetectorConstruction::DefineMaterial()
     }
 
     mptScint->AddProperty("RINDEX", lyso_rindex_ene, lyso_rindex_values, n);
-    mptScint->AddProperty("SCINTILLATIONCOMPONENT1", LYSO_ene, LYSO_fast,num);
-    mptScint->AddProperty("ABSLENGTH", LYSO_ene, LYSO_absv2,num);
+
+    G4double lyso_spectrum_ene[1000], lyso_spectrum_values[1000];
+
+    n = read_tsv_file("lyso_scintillation_spectrum.dat", lyso_spectrum_ene, lyso_spectrum_values, eV, 1);
+
+    if (n == -1) {
+        fprintf(stderr, "error reading lyso_scintillation_spectrum.dat!\n");
+        exit(1);
+    }
+
+    mptScint->AddProperty("SCINTILLATIONCOMPONENT1", lyso_spectrum_ene, lyso_spectrum_values, n);
+
+    G4double lyso_absorption_length_ene[1000], lyso_absorption_length_values[1000];
+
+    n = read_tsv_file("lyso_absorption_length.dat", lyso_absorption_length_ene, lyso_absorption_length_values, eV, mm);
+
+    if (n == -1) {
+        fprintf(stderr, "error reading lyso_absorption_length.dat!\n");
+        exit(1);
+    }
+
+    mptScint->AddProperty("ABSLENGTH", lyso_absorption_length_ene, lyso_absorption_length_values, n);
     mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);/*Word data check*/
-    mptScint->AddProperty("RAYLEIGH", LYSO_ene, LYSO_scat,num);
-    mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION);/*10%*/
+
+    G4double lyso_scattering_length_ene[1000], lyso_scattering_length_values[1000];
+
+    n = read_tsv_file("lyso_scattering_length.dat", lyso_scattering_length_ene, lyso_scattering_length_values, eV, mm);
+
+    if (n == -1) {
+        fprintf(stderr, "error reading lyso_scattering_length.dat!\n");
+        exit(1);
+    }
+
+    mptScint->AddProperty("RAYLEIGH", lyso_scattering_length_ene, lyso_scattering_length_values, n);
+    mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION);
     mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 39.1 * ns);
-    mptScint->AddConstProperty("SCINTILLATIONYIELD1", LYSO_SC1);/*the fraction of photons in each component must be specified, all to component 1*/
+    /*the fraction of photons in each component must be specified, all to component 1*/
+    mptScint->AddConstProperty("SCINTILLATIONYIELD1", LYSO_SC1);
     mptScint->AddConstProperty("SCINTILLATIONRISETIME1", LYSO_RT1 * ps);
     scintillator-> SetMaterialPropertiesTable(mptScint);
 
