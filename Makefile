@@ -16,7 +16,7 @@ Makefile.dep:
 sim: action.o construction.o detector.o event.o generator.o physics.o run.o sim.o stepping.o tracking.o
 
 geant4:
-	test ! -f rm -f geant4-v11.0.2.tar.gz && \
+	test ! -f geant4-v11.0.2.tar.gz && \
 	curl -O -L http://cern.ch/geant4-data/releases/geant4-v11.0.2.tar.gz && \
 	tar -xzvf geant4-v11.0.2.tar.gz || true
 	cd geant4-v11.0.2 && \
