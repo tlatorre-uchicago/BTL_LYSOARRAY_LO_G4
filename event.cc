@@ -68,7 +68,7 @@ void MyEventAction::BeginOfEventAction(const G4Event *anEvent)
     // Change of gun position between events depending on geometry (LYSO bar/tile)
         G4double GenX=(-0.005/2+0.005*G4UniformRand());
         G4double GenZ=(-0.005/2+0.005*G4UniformRand());
-        command = "/gun/position "+std::to_string(GenX)+" 0.05 "+std::to_string(GenZ)+" m"; 
+        command = "/gun/position "+std::to_string(GenX)+" -0.02 "+std::to_string(GenZ)+" m"; 
         G4cout<< command << G4endl;
         UImanager->ApplyCommand(command);     
         command = "/gun/direction 0. -1. 0."; 

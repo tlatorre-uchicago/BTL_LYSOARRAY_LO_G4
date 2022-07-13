@@ -117,10 +117,11 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
   UImanager->ApplyCommand("/vis/scene/endOfEventAction accumulate");
   */
   
-  UImanager->ApplyCommand("/control/loop myRun.mac Amp 2. 3. 0.005");
+  UImanager->ApplyCommand("/control/loop myRun.mac Amp 10. 200. 20.");
+  //UImanager->ApplyCommand("/control/loop electron.mac run 0. 1. 0.001");
   
   //ui->SessionStart();
-    }
+  }
 
 
     return 0;
