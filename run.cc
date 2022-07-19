@@ -93,7 +93,10 @@ void MyRunAction::BeginOfRunAction(const G4Run* run)
     strRunID << runID;
 
     // Creation of Output file
-    man->OpenFile("./Results/detector_outside_electron/"+OutputName+strRunID.str()+".root");
+    //man->OpenFile("./Results/detector_outside_electron/"+OutputName+strRunID.str()+".root");
+
+    // test to write files to external hard drive
+    man->OpenFile("/mnt/d/DMProject/detector_outside/electron/10MeV_100MeV_10MeV/"+OutputName+strRunID.str()+".root");
 
 }
 void MyRunAction::EndOfRunAction(const G4Run*)
