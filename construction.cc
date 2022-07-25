@@ -19,7 +19,6 @@ MyDetectorConstruction::~MyDetectorConstruction()
  * class */
 void MyDetectorConstruction::DefineMaterial()
 {
-    int n;
     /////////////
     //Materials//
     /////////////
