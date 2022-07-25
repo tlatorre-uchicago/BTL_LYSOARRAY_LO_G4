@@ -1,5 +1,6 @@
 #include "construction.hh"
 #include "util.hh"
+#include "materials.hh"
 
 MyDetectorConstruction::MyDetectorConstruction(MyG4Args* MainArgs)
 {// constructor
@@ -66,109 +67,8 @@ void MyDetectorConstruction::DefineMaterial()
     mptSiO2->AddProperty("ABSLENGTH", energySiO2, ABSSiO2, 2);
     SiO2->SetMaterialPropertiesTable(mptSiO2);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // LYSO  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // LYSO definition:  https://github.com/jgpavez/lysoDetector/blob/master/src/lysoDetectorConstruction.cc
-
-    G4double prelude_density = 7.125*g/cm3;
-    prelude = new G4Material("prelude", prelude_density, 4);
-    prelude->AddElement(nist->FindOrBuildElement("Lu"),71.96*perCent);
-    prelude->AddElement(nist->FindOrBuildElement("Si"),6.35*perCent);
-    prelude->AddElement(nist->FindOrBuildElement("O"), 18.08*perCent);
-    prelude->AddElement(nist->FindOrBuildElement("Y"), 3.62*perCent);
-    
-    G4double Cecont = 0.0019;
-    scintillator = new G4Material("scintillator", prelude_density ,2);
-    scintillator->AddMaterial(prelude,(100-Cecont*100)*perCent);
-    scintillator->AddElement(nist->FindOrBuildElement("Ce"), (Cecont*100)*perCent);
-
-    G4MaterialPropertiesTable *mptScint = new G4MaterialPropertiesTable();
-
-    G4double lyso_rindex_ene[1000], lyso_rindex_values[1000];
-
-    n = read_tsv_file("lyso_rindex.dat", lyso_rindex_ene, lyso_rindex_values, eV, 1);
-
-    if (n == -1) {
-        fprintf(stderr, "error reading lyso_rindex.dat!\n");
-        exit(1);
-    }
-
-    mptScint->AddProperty("RINDEX", lyso_rindex_ene, lyso_rindex_values, n);
-
-    G4double lyso_spectrum_ene[1000], lyso_spectrum_values[1000];
-
-    n = read_tsv_file("lyso_scintillation_spectrum.dat", lyso_spectrum_ene, lyso_spectrum_values, eV, 1);
-
-    if (n == -1) {
-        fprintf(stderr, "error reading lyso_scintillation_spectrum.dat!\n");
-        exit(1);
-    }
-
-    mptScint->AddProperty("SCINTILLATIONCOMPONENT1", lyso_spectrum_ene, lyso_spectrum_values, n);
-
-    G4double lyso_absorption_length_ene[1000], lyso_absorption_length_values[1000];
-
-    n = read_tsv_file("lyso_absorption_length.dat", lyso_absorption_length_ene, lyso_absorption_length_values, eV, mm);
-
-    if (n == -1) {
-        fprintf(stderr, "error reading lyso_absorption_length.dat!\n");
-        exit(1);
-    }
-
-    mptScint->AddProperty("ABSLENGTH", lyso_absorption_length_ene, lyso_absorption_length_values, n);
-    mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);
-
-    G4double lyso_scattering_length_ene[1000], lyso_scattering_length_values[1000];
-
-    n = read_tsv_file("lyso_scattering_length.dat", lyso_scattering_length_ene, lyso_scattering_length_values, eV, mm);
-
-    if (n == -1) {
-        fprintf(stderr, "error reading lyso_scattering_length.dat!\n");
-        exit(1);
-    }
-
-    mptScint->AddProperty("RAYLEIGH", lyso_scattering_length_ene, lyso_scattering_length_values, n);
-    mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION);
-    mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 39.1 * ns);
-    /*the fraction of photons in each component must be specified, all to component 1*/
-    mptScint->AddConstProperty("SCINTILLATIONYIELD1", LYSO_SC1);
-    mptScint->AddConstProperty("SCINTILLATIONRISETIME1", LYSO_RT1 * ps);
-    scintillator-> SetMaterialPropertiesTable(mptScint);
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // RTV3145  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    H = nist -> FindOrBuildElement("H");
-    Si = nist -> FindOrBuildElement("Si");
-    O = nist -> FindOrBuildElement("O");
-    C = nist -> FindOrBuildElement("C");
-    RTV3145 = new G4Material("RTV3145", 1.27*g/cm3,4);
-    RTV3145->AddElement(H, 5);
-    RTV3145->AddElement(Si,3);
-    RTV3145->AddElement(C,5);
-    RTV3145->AddElement(O,5);
-
-    const G4int numRTV=30;
-    G4double RTV_ene[numRTV]   =  { 2.*eV ,  2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV,  2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV ,  3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV};
-    G4double RTV_RINDEX[numRTV]   =  {1.39539274, 1.39993242, 1.40181797, 1.40642231, 1.40942362,
-       1.41301353, 1.41660416, 1.42133831, 1.42621651, 1.43028629,
-       1.4380602 , 1.44295981, 1.44800143, 1.45426941, 1.46297174,
-       1.47117145, 1.47716873, 1.48199179, 1.48986671, 1.49899325,
-       1.50739242, 1.51507152, 1.52325557, 1.53162857, 1.53973068,
-       1.54747239, 1.55620018, 1.56428621, 1.5715874 , 1.5823968 };
-    G4double RTV_ABSLEN[numRTV]   =  {2.89352576*cm, 2.81870651*cm, 2.6356988*cm , 2.54633899*cm, 2.38804899*cm,
-       2.33777894*cm, 2.20850964*cm, 2.13442529*cm, 1.99960048*cm, 1.91645445*cm,
-       1.85130259*cm, 1.7937614*cm , 1.70213491*cm, 1.62087764*cm, 1.56593542*cm,
-       1.52046865*cm, 1.47959493*cm, 1.42291287*cm, 1.35332923*cm, 1.29213138*cm,
-       1.23859418*cm, 1.19172294*cm, 1.14473815*cm, 1.09502845*cm, 1.0599705*cm ,
-       1.02676536*cm, 0.98029928*cm, 0.93696289*cm, 0.8959285*cm , 0.87300369*cm};
-    G4MaterialPropertiesTable *mptRTV = new G4MaterialPropertiesTable();
-    mptRTV->AddProperty("RINDEX",    RTV_ene,    RTV_RINDEX,     numRTV); // fraction of the light reflected (all=1)
-    mptRTV->AddProperty("ABSLENGTH", RTV_ene,    RTV_ABSLEN,     numRTV); // fraction of the light reflected (all=1)
-    RTV3145-> SetMaterialPropertiesTable(mptRTV);
+    RTV3145 = get_rtv();
+    scintillator = get_lyso();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Epoxy  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
