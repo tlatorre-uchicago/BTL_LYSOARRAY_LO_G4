@@ -17,37 +17,46 @@ void MySteppingAction::UserSteppingAction(const G4Step *step)
     const MyDetectorConstruction *detectorConstruction = static_cast<const MyDetectorConstruction*> (G4RunManager::GetRunManager()->GetUserDetectorConstruction());
 
 //////////////////////////////////////////////////////////////////////////////
-// Electron Information
+// Energy Deposition Information
 //////////////////////////////////////////////////////////////////////////////
     G4LogicalVolume *fScoringVolume  = detectorConstruction->GetScoringVolume();
-    G4LogicalVolume *fDetectorVolume  = detectorConstruction->GetDetectorVolume();
-    //if(step -> GetTrack() -> GetTrackID() != 1) {
-    if(step -> GetTrack() -> GetDefinition() == G4Electron::Definition()) {
+    //G4LogicalVolume *fDetectorVolume  = detectorConstruction->GetDetectorVolume();
+
+    if(step -> GetTrack() -> GetDefinition() != G4OpticalPhoton::Definition()) {
         if(volume != fScoringVolume)
             return;
-
         G4double edep = step->GetTotalEnergyDeposit();  
-        fEventAction->AddEdep(edep);
+        PassArgs->AddEdep(edep);
+        PassArgs->AddNEdep();
     }
 //////////////////////////////////////////////////////////////////////////////
 // Gamma Information
 //////////////////////////////////////////////////////////////////////////////
+
+    /*if (volume == fDetectorVolume) {
+        fEventAction->AddLO(1.);
+        G4ThreeVector momPhoton = preStepPoint->GetMomentum();
+    }*/
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Killed tracks Information and actions
+//////////////////////////////////////////////////////////////////////////////
+
     G4AnalysisManager *man = G4AnalysisManager::Instance();
     G4StepPoint *preStepPoint = step->GetPreStepPoint();
     G4double TlengthK;
-    G4double TimeK;
+    G4double TimeK=preStepPoint->GetGlobalTime();
+    G4double TimeKL=preStepPoint->GetLocalTime();
+    G4double TimeKLLim=PassArgs->GetKillTL();
     G4ThreeVector TranslVol;
     G4Track *track = step -> GetTrack();
 
-    if (volume == fDetectorVolume) {
-        fEventAction->AddLO(1.);
-        G4ThreeVector momPhoton = preStepPoint->GetMomentum();
+    if(PassArgs->GetKillTLTrue()==1 && TimeKL/ps>TimeKLLim && PassArgs->GetEdep()>0){
+        G4cout<< "Track killed at time: "<< TimeKL/ps << G4endl;
+        track -> SetTrackStatus(fStopAndKill); 
     }
 
-
-//////////////////////////////////////////////////////////////////////////////
-// Killed tracks Information
-//////////////////////////////////////////////////////////////////////////////
     if(PassArgs->GetTree_Stepping()==1){
         if(track -> GetTrackStatus() != fAlive) {                     
                                 TlengthK =  track->GetTrackLength();
