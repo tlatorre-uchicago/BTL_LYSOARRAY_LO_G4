@@ -1,0 +1,5 @@
+#for energy changing
+/control/foreach energy_plot.mac ener "MeV"
+
+#for same energy
+#/control/loop electron.mac run 0. 1. 1.

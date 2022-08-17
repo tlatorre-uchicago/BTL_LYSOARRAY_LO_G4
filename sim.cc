@@ -8,6 +8,10 @@
 //#include "G4VisManager.hh" /* Vis -> Visualizer*/
 //#include "G4VisExecutive.hh"
 //#include "G4UIExecutive.hh"
+#include "G4VisManager.hh"
+#include "G4VisExecutive.hh"
+#include "G4UIExecutive.hh"
+//#include "G4AnalysisManager.hh"
 
 /*Simulation created files*/
 #include "construction.hh"
@@ -35,7 +39,7 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
                 }
         }
 
-    if (Oin == 0 ) {  OutName = "WhateverTestName";   }
+    if (Oin == 0 ) {  OutName = "DetectorOutside";   }
 
     runManager -> SetUserInitialization(new MyActionInitialization(OutName)); /*Define actions*/
 
@@ -94,7 +98,30 @@ int main(int argc, char** argv) /* argc, argv are the argument passed to the sim
         for (int i = 1; i <= nrep; i=i+1){
             UImanager->ApplyCommand(command+fileName);
         }*/
- //   }
+        
+        {
+  
+  G4UIExecutive *ui = new G4UIExecutive(argc, argv);
+  
+  G4VisManager * visManager = new G4VisExecutive();
+  visManager->Initialize();
+  
+  G4UImanager *UImanager = G4UImanager::GetUIpointer();
+  
+  /*
+  UImanager->ApplyCommand("/vis/open OGL");
+  UImanager->ApplyCommand("/vis/viewer/set/viewpointVector 1 1 1");
+  UImanager->ApplyCommand("/vis/drawVolume");
+  UImanager->ApplyCommand("/vis/viewer/set/autoRefresh");
+  UImanager->ApplyCommand("/vis/scene/add/trajectories smooth");
+  UImanager->ApplyCommand("/vis/scene/endOfEventAction accumulate");
+  */
+  
+  UImanager->ApplyCommand("/control/loop myRun.mac Amp 10. 100. 10.");
+  //UImanager->ApplyCommand("/control/loop electron.mac run 0. 1. 0.001");
+  
+  //ui->SessionStart();
+  }
 
 
     return 0;

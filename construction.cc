@@ -3,8 +3,13 @@
 MyDetectorConstruction::MyDetectorConstruction()
 {// constructor
 
-    // Initialization of variables in the constructor and messenger definitions for later modification in between runs
-    LYSO_L = 57./2.;
+    // Initialization of variables in the constructor and messenger definitions for later modification in between runs (i.e. define commands that can be changed in terminal)
+    
+    TARGET_YIELD= 124.;
+    LYSO_SCALERESOLUTION=0.1;
+    Vovcon=3.5;
+    /*
+    LYSO_L = 57./2.;    
     fMessenger = new G4GenericMessenger(this, "/detector/","Detector Construction");
     fMessenger->DeclareProperty("LYSO_L", LYSO_L, "Length of LYSO crystal in mm");
 
@@ -12,11 +17,11 @@ MyDetectorConstruction::MyDetectorConstruction()
     fMessenger_thick = new G4GenericMessenger(this, "/detector/","Detector Construction");
     fMessenger_thick->DeclareProperty("LYSO_thick", LYSO_thick, "Section dimension for the LYSO in mm");
 
-    LYSO_YIELD=40000.;
+    LYSO_YIELD=40000.;  //yield, constant
     fMessenger_YIELD = new G4GenericMessenger(this, "/detector/","Detector Construction");
     fMessenger_YIELD->DeclareProperty("LYSO_YIELD", LYSO_YIELD, "Ammount of photons created per MeV deposited in the crystal");
 
-    LYSO_SCALERESOLUTION=0.;
+    LYSO_SCALERESOLUTION=0.; // factor to vary width of yield distribution, constant
     fMessenger_SR = new G4GenericMessenger(this, "/detector/","Detector Construction");
     fMessenger_SR->DeclareProperty("LYSO_SCALERESOLUTION", LYSO_SCALERESOLUTION, " ");
 
@@ -54,7 +59,9 @@ MyDetectorConstruction::MyDetectorConstruction()
     ESRtrue=1;
     fMessenger_ESR = new G4GenericMessenger(this, "/detector/","Detector Construction");
     fMessenger_ESR->DeclareProperty("ESR", ESRtrue, "LYSO covered by ESR?");
-
+    */
+    
+    
     // Run material function in the constructor
     DefineMaterial(); 
 
@@ -75,7 +82,7 @@ void MyDetectorConstruction::DefineMaterial() // function to define a single tim
     worldMat = nist -> FindOrBuildMaterial("G4_AIR");
     G4double energyWorld[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};   // Calculate momentum from wavelength [0.2,0.9]nm to energy
     G4double rindexWorld[2] ={1.0, 1.0};                          // Define Refractive index for aerogel (constant, without dispersion in this case)
-        //Refer material properties to material 
+    //Refer material properties to material 
     G4MaterialPropertiesTable *mptWorld = new G4MaterialPropertiesTable();
     mptWorld->AddProperty("RINDEX", energyWorld, rindexWorld, 2);    // AddProperty("Mat Prop name", energy, values, num points)
     worldMat->SetMaterialPropertiesTable(mptWorld);
@@ -87,390 +94,149 @@ void MyDetectorConstruction::DefineMaterial() // function to define a single tim
     G4MaterialPropertiesTable *mptSiO2 = new G4MaterialPropertiesTable();
     G4double energySiO2[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};
     G4double rindexSiO2[2] ={1.4585,1.4585};  
-    G4double ABSSiO2[2] ={0.01*mm,0.01*mm};  
+    G4double ABSSiO2[2] ={0.01*mm,0.01*mm}; // absorption 
     mptSiO2->AddProperty("RINDEX", energySiO2, rindexSiO2, 2);    // AddProperty("Mat Prop name", energy, values, num points)
     mptSiO2->AddProperty("ABSLENGTH", energySiO2, ABSSiO2,2);
     SiO2->SetMaterialPropertiesTable(mptSiO2);
-
-    // Define Element class: Carbon -> element
-    C = nist->FindOrBuildElement("C");
+    
+    // Define material class: WSi -> G4Material (name, density, number of components)
+    WSi = new G4Material("WSi", 2.201*g/cm3, 2);
+    WSi -> AddElement(nist->FindOrBuildElement("W"),1);
+    WSi -> AddElement(nist->FindOrBuildElement("Si"),1);
+    G4MaterialPropertiesTable *mptWSi = new G4MaterialPropertiesTable();
+    G4double energyWSi[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};
+    // NEED TO FIND THIS INFORMATION
+    G4double rindexWSi[2] ={1.4585,1.4585};  
+    G4double ABSWSi[2] ={0.01*mm,0.01*mm}; // absorption 
+    mptWSi->AddProperty("RINDEX", energyWSi, rindexWSi, 2);    // AddProperty("Mat Prop name", energy, values, num points)
+    mptWSi->AddProperty("ABSLENGTH", energyWSi, ABSWSi,2);
+    WSi->SetMaterialPropertiesTable(mptWSi);
  
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // LYSO  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Target  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // LYSO definition:  https://github.com/jgpavez/lysoDetector/blob/master/src/lysoDetectorConstruction.cc
-
-    G4double prelude_density = 7.15*g/cm3;
-    prelude = new G4Material("prelude", prelude_density, 4);
-    prelude->AddElement(nist->FindOrBuildElement("Lu"),66.0891838*perCent);
-    prelude->AddElement(nist->FindOrBuildElement("Si"),6.6303495*perCent);
-    prelude->AddElement(nist->FindOrBuildElement("O"), 18.8850049*perCent);
-    prelude->AddElement(nist->FindOrBuildElement("Y"), 8.3954618*perCent);
     
-    G4double Cecont =0.0019;
-    scintillator = new G4Material("scintillator", prelude_density ,2);
-    scintillator->AddMaterial(prelude,(100-Cecont*100)*perCent);
-    scintillator->AddElement(nist->FindOrBuildElement("Ce"), (Cecont*100)*perCent);
-
-    G4MaterialPropertiesTable *mpt = new G4MaterialPropertiesTable();
-
-    const G4int num = 32;
-    G4double LYSO_ene[num]   =  {1.5*eV, 2.*eV ,  2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV,  2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV ,  3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV, 5*eV};
-
-    G4double LYSO_eneMin[num]   =  {1.5*eV, 2.17546938*eV, 2.23475776*eV, 2.29430737*eV, 2.35411993*eV, 2.4141972*eV ,
-       2.47454094*eV, 2.53515292*eV, 2.59603493*eV, 2.65718878*eV, 2.71861631*eV,
-       2.78031934*eV, 2.84229974*eV, 2.90455938*eV, 2.96710015*eV, 3.02992397*eV,
-       3.09303275*eV, 3.15642844*eV, 3.220113  *eV, 3.28408842*eV, 3.34835668*eV,
-       3.4129198 *eV, 3.47777982*eV, 3.54293879*eV, 3.60839878*eV, 3.67416188*eV,
-       3.74023021*eV, 3.80660588*eV, 3.87329106*eV, 3.9402879 *eV, 4.00759861*eV, 5*eV};
-
-    G4double LYSO_fast[num]  =  {0.0005, 0.00547041 , 0.00742609 , 0.00928865 , 0.01118718,  0.01389001,  0.01719669,  0.0213541,   0.02886363,  0.04151549,  0.06495384,  0.10380228,  0.16436757,  0.24529401,  0.34573305,  0.45515023,  0.56162549,  0.66179016,  0.77098452,  0.88530138,  0.97313946,  0.99724079,  0.97220698,  0.85723693,  0.65925813,  0.41169552,  0.13144243,  0.02564552,  0.01029099,  0.0040628,  0.00198485 ,0.0002};
+    // make GaAs first
+    G4double 	gaas_density = 5.32*g/cm3;  // from wikipedia
+    prelude = new G4Material("GaAs", gaas_density, 2);
+    // composition by fraction of mass
+    prelude->AddElement(nist->FindOrBuildElement("Ga"),50.*perCent);
+    prelude->AddElement(nist->FindOrBuildElement("As"),50.*perCent);
     
-    G4double LYSO_absv[num]   =  {3100*mm ,3043.12030366*mm, 2910.82651214*mm, 2784.92853358*mm, 2673.18826225*mm, 2558.74171563*mm, 2434.67018908*mm, 2309.29098197*mm, 2174.98328362*mm, 2040.58925841*mm, 1905.69079561*mm, 1770.63093617*mm, 1634.75136156*mm, 1500.22714282*mm, 1368.97382295*mm, 1237.431274*mm, 1105.49166167*mm,  974.3012427*mm,   843.12436693*mm,  707.75698288*mm , 574.16698216*mm,  445.00515572*mm,  317.14663428*mm,  158.48142788*mm,   49.44703917*mm, 13.05239972*mm,    5.72851208*mm,    3.75039458*mm,    3.30181138*mm,    3.13218799*mm,   3.04577151*mm, 3.*mm};
-    G4double LYSO_absvm[num]   =  {3100*m ,3043.12030366*m, 2910.82651214*m, 2784.92853358*m, 2673.18826225*m, 2558.74171563*m, 2434.67018908*m, 2309.29098197*m, 2174.98328362*m, 2040.58925841*m, 1905.69079561*m, 1770.63093617*m, 1634.75136156*m, 1500.22714282*m, 1368.97382295*m, 1237.431274*m, 1105.49166167*m,  974.3012427*m,   843.12436693*m,  707.75698288*m , 574.16698216*m,  445.00515572*m,  317.14663428*m,  158.48142788*m,   49.44703917*m, 13.05239972*m,    5.72851208*m,    3.75039458*m,    3.30181138*m,    3.13218799*m,   3.04577151*m, 3.*m};
+    G4double Sicont = 0.0000191154;
+    G4double Bcont = 0.000286625;
+    G4double target_density = 5.32023*g/cm3;
+    scintillator = new G4Material("scintillator", target_density ,3);
+    scintillator->AddMaterial(prelude,(100-(Sicont+Bcont)*100)*perCent);
+    scintillator->AddElement(nist->FindOrBuildElement("Si"), (Sicont*100)*perCent);
+    scintillator->AddElement(nist->FindOrBuildElement("B"), (Bcont*100)*perCent);
 
-    G4double LYSO_absv2[num]   =  {3100.12030366*mm,3043.12030366*mm, 2910.82651214*mm, 2784.92853358*mm, 2673.18826225*mm,
-       2558.74171563*mm, 2434.67018908*mm, 2309.29098197*mm, 2174.98328362*mm,
-       2040.58925841*mm, 1905.69079561*mm, 1770.63093617*mm, 1634.75136156*mm,
-       1500.22714282*mm, 1368.97382295*mm, 1237.431274  *mm, 1105.49166167*mm,
-        974.3012427 *mm,  843.12436693*mm,  707.75698288*mm,  574.16698216*mm,
-        445.00515572*mm,  317.14663428*mm,  158.48142788*mm,   49.44703917*mm,
-         13.05239972*mm,    5.72851208*mm,    3.75039458*mm,    3.30181138*mm,
-          3.13218799*mm,    3.04577151*mm,3.*mm};
-
-    G4double LYSO_r[num] =  {1.82,1.8200522,  1.82135278, 1.82265335, 1.82395392, 1.8252545,  1.82655507, 1.82785564, 1.82915621, 1.83045679, 1.83175736, 1.83305793, 1.8343585, 1.83565908, 1.83695965, 1.83826022, 1.8395608,  1.84086137, 1.84216194, 1.84346251, 1.84476309, 1.84606366, 1.84736423, 1.84866481, 1.84996538, 1.85126595, 1.85256652, 1.8538671,  1.85516767, 1.85646824, 1.85776882,1.86};
-
-    G4double LYSO_scat[num] = {234.45212959*mm,234.45212959*mm, 227.68020394*mm, 221.23075095*mm, 215.08127251*mm, 209.21131583*mm, 203.6022461*mm,  198.23704898*mm, 193.08232197*mm, 188.33697299*mm, 183.67040027*mm, 179.27354488*mm, 174.97463851*mm, 170.85134353*mm, 166.91194186*mm, 163.09853917*mm, 159.42071546*mm, 155.88459404*mm, 152.46136681*mm, 149.16145631*mm, 146.04064832*mm, 142.88372645*mm, 139.96618158*mm, 137.03682031*mm, 134.27498273*mm, 131.74895681*mm,  129.02110085*mm, 126.41169996*mm, 123.94680927*mm, 121.54959211*mm, 119.27852085*mm,119.27852085*mm};
-G4MaterialPropertiesTable *mptScint= new G4MaterialPropertiesTable();
-
-  
-  mptScint->AddProperty("RINDEX", LYSO_ene, LYSO_r,num);
-  mptScint->AddProperty("SCINTILLATIONCOMPONENT1", LYSO_ene, LYSO_fast,num);
-  mptScint->AddProperty("ABSLENGTH", LYSO_ene, LYSO_absv2,num);
-  mptScint->AddConstProperty("SCINTILLATIONYIELD", LYSO_YIELD / MeV);/*Word data check*/
-  mptScint->AddProperty("RAYLEIGH", LYSO_ene, LYSO_scat,num);
-  mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION);/*10%*/
-  mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 39.1 * ns);
-  mptScint->AddConstProperty("SCINTILLATIONYIELD1", 1.0);/*the fraction of photons in each component must be specified, all to component 1*/
-  mptScint->AddConstProperty("SCINTILLATIONRISETIME1", 60 * ps);
-  scintillator-> SetMaterialPropertiesTable(mptScint);
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // RTV3145  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    H = nist -> FindOrBuildElement("H");
-    Si = nist -> FindOrBuildElement("Si");
-    O = nist -> FindOrBuildElement("O");
-    C = nist -> FindOrBuildElement("C");
-    RTV3145 = new G4Material("RTV3145", 1.27*g/cm3,4);
-    RTV3145->AddElement(H, 5);
-    RTV3145->AddElement(Si,3);
-    RTV3145->AddElement(C,5);
-    RTV3145->AddElement(O,5);
-
-    const G4int numRTV=30;
-    G4double RTV_ene[numRTV]   =  { 2.*eV ,  2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV,  2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV ,  3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV};
-    G4double RTV_RINDEX[numRTV]   =  {1.39539274, 1.39993242, 1.40181797, 1.40642231, 1.40942362,
-       1.41301353, 1.41660416, 1.42133831, 1.42621651, 1.43028629,
-       1.4380602 , 1.44295981, 1.44800143, 1.45426941, 1.46297174,
-       1.47117145, 1.47716873, 1.48199179, 1.48986671, 1.49899325,
-       1.50739242, 1.51507152, 1.52325557, 1.53162857, 1.53973068,
-       1.54747239, 1.55620018, 1.56428621, 1.5715874 , 1.5823968 };
-    G4double RTV_ABSLEN[numRTV]   =  {2.89352576*cm, 2.81870651*cm, 2.6356988*cm , 2.54633899*cm, 2.38804899*cm,
-       2.33777894*cm, 2.20850964*cm, 2.13442529*cm, 1.99960048*cm, 1.91645445*cm,
-       1.85130259*cm, 1.7937614*cm , 1.70213491*cm, 1.62087764*cm, 1.56593542*cm,
-       1.52046865*cm, 1.47959493*cm, 1.42291287*cm, 1.35332923*cm, 1.29213138*cm,
-       1.23859418*cm, 1.19172294*cm, 1.14473815*cm, 1.09502845*cm, 1.0599705*cm ,
-       1.02676536*cm, 0.98029928*cm, 0.93696289*cm, 0.8959285*cm , 0.87300369*cm};
-    G4MaterialPropertiesTable *mptRTV = new G4MaterialPropertiesTable();
-    mptRTV->AddProperty("RINDEX",    RTV_ene,    RTV_RINDEX,     numRTV); // fraction of the light reflected (all=1)
-    mptRTV->AddProperty("ABSLENGTH", RTV_ene,    RTV_ABSLEN,     numRTV); // fraction of the light reflected (all=1)
-    RTV3145-> SetMaterialPropertiesTable(mptRTV);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Epoxy  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    N = nist -> FindOrBuildElement("N");
-    EPOXY = new G4Material("EPOXY", 1.16*g/cm3,4);
-    EPOXY->AddElement(H, 32);
-    EPOXY->AddElement(N,2);
-    EPOXY->AddElement(C,15);
-    EPOXY->AddElement(O,4);
-
-    const G4int numEP=30;
-    G4double EPOXY_ene[numEP]   =  { 2.*eV ,  2.05*eV ,2.1*eV , 2.15*eV ,2.2*eV , 2.25*eV, 2.3*eV,  2.35*eV ,2.4*eV , 2.45*eV,2.5*eV , 2.55*eV ,2.6*eV , 2.65*eV, 2.7*eV , 2.75*eV, 2.8*eV , 2.85*eV ,2.9*eV ,2.95*eV ,3.*eV ,  3.05*eV, 3.1*eV , 3.15*eV ,3.2*eV , 3.25*eV, 3.3*eV , 3.35*eV ,3.4*eV , 3.45*eV};
-    G4double EPOXY_RINDEX[numEP]   =  {1.54681164, 1.54728704, 1.54753043, 1.5486172 , 1.54841963, 1.54881503, 1.54919653, 1.54927211, 1.5508896 , 1.55264765,
-       1.55430624, 1.55734675, 1.55627368, 1.5588548 , 1.56081691, 1.56419381, 1.56298843, 1.56578221, 1.56737946, 1.57147998,
-       1.57392046, 1.57520827, 1.57817494, 1.58191818, 1.58438809, 1.58613128, 1.58577288, 1.58801395, 1.59180049, 1.59584015};
-    G4double EPOXY_ABSLEN[numEP]   =  {38.01438753*cm, 35.75906054*cm, 33.61113008*cm, 31.56310336*cm, 29.60816877*cm, 27.74012015*cm, 25.95329104*cm, 24.24249722*cm, 22.60298646*cm, 21.03039452*cm,
-       19.52070625*cm, 18.07022145*cm, 16.67552452*cm, 15.33345766*cm, 14.04109698*cm, 12.79573124*cm, 11.59484285*cm, 10.43609089*cm,  9.31729589*cm,  8.23642615*cm,
-        7.1915854*cm ,  6.18100172*cm,  5.03496374*cm,  4.41427404*cm,  3.79572092*cm, 3.14544767*cm,  2.48008015*cm,  2.1255284*cm ,  1.83454881*cm,  1.5814501*cm};
-    G4MaterialPropertiesTable *mptRESIN = new G4MaterialPropertiesTable();
-    mptRESIN->AddProperty("RINDEX",    EPOXY_ene,    EPOXY_RINDEX,     numEP); // fraction of the light reflected (all=1)
-    mptRESIN->AddProperty("ABSLENGTH", EPOXY_ene,    EPOXY_ABSLEN,     numEP); // fraction of the light reflected (all=1)
-    EPOXY-> SetMaterialPropertiesTable(mptRESIN);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //FR4 (Glass + Epoxy)  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
- G4Material* FR4 = new G4Material("FR4" , 1.86*g/cm3, 2);
- FR4->AddMaterial(EPOXY, 0.472*perCent);
- FR4->AddMaterial(SiO2, 0.528*perCent);
-    //G4MaterialPropertiesTable *mptFR4 = new G4MaterialPropertiesTable();
-    //mptFR4->AddProperty("RINDEX",    energySiO2,    rindexSiO2,     numEP); 
-    FR4-> SetMaterialPropertiesTable(mptSiO2);
-//Alumina from
-//http://geant4-hn.slac.stanford.edu:5090/HyperNews/public/get/emfields/29/1/1.html
-//density = 3.75*g/cm3; //
-Al = nist -> FindOrBuildElement("Al");
-G4Material* Alumina = new G4Material("Alumina"  , 3.75*g/cm3, 2);
-Alumina->AddElement(Al, 2);
-Alumina->AddElement(O, 3);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // MIRROR PROPERTIES  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-G4double energymirror0[34] ={1.387638658*eV,1.414514446*eV,1.442584622*eV,1.475671466*eV,1.511484607*eV,1.540077409*eV,1.57666106*eV,1.611195145*eV,1.650914734*eV,1.692642175*eV,1.736533665*eV,1.78129609*eV,1.831519006*eV,1.883017892*eV,1.952071279*eV,1.994518826*eV,2.056695744*eV,2.119145672*eV,2.191060487*eV,2.265172322*eV,2.344473291*eV,2.42373704*eV,2.522802173*eV,2.620592548*eV,2.726243339*eV,2.841937404*eV,2.962139009*eV,3.10551606*eV,3.198826301*eV,3.213681724*eV,3.235720977*eV,3.262160277*eV,3.303164908*eV,3.422984584*eV};
-
-
-
- G4double reflectivity0[34]={0.240441406,0.238504637,0.291823064,0.409637463,0.580529881,0.795137568,
-0.959392257,0.98221903,0.992861287,0.981807802,
-0.973183199,0.978334456,0.986066277,0.98714133,0.982715392,0.984215926,0.986816093,0.987184464,0.981927024
-,0.983870632,0.983629712,0.984087367,0.974020118,0.971960262,0.972658815,0.977535487,0.975813698,0.9472273,
-0.803353217, 0.630142605,0.488159981,0.333316034,0.174725627,0.127884496};
-
-
-    G4double energymirror[34] = {3.422984584*eV,3.303164908*eV,3.262160277*eV,3.235720977*eV,3.213681724*eV,3.198826301*eV,3.10551606*eV,2.962139009*eV,2.841937404*eV,2.726243339*eV,2.620592548*eV,2.522802173*eV,2.42373704*eV,2.344473291*eV,2.265172322*eV,2.191060487*eV,2.119145672*eV,2.056695744*eV,1.994518826*eV,1.952071279*eV,1.883017892*eV,1.831519006*eV,
-1.78129609*eV,1.736533665*eV,1.692642175*eV,1.650914734*eV,1.611195145*eV,1.57666106*eV,1.540077409*eV,1.511484607*eV,1.475671466*eV,1.442584622*eV,1.414514446*eV,1.387638658*eV};
-    G4double reflectivity[34] ={0.127884496,0.174725627,0.333316034,0.488159981,0.630142605,0.803353217, 0.9472273,0.975813698,0.977535487,0.972658815,0.971960262,0.974020118,0.984087367,0.983629712,0.983870632,0.981927024,0.987184464,0.986816093,0.984215926,0.982715392,0.98714133,0.986066277,
-0.978334456,0.973183199,0.981807802,0.992861287,0.98221903,0.959392257,0.795137568,0.580529881,0.409637463,0.291823064,0.238504637,0.240441406
-};
-
-    G4double energymirror3[8] = {1.39*eV,1.47*eV,1.57*eV,1.65*eV,2.4*eV,3.1*eV,3.26*eV,3.420*eV};   // 
-    G4double reflectivity3[8] ={0.24, 0.41,0.99, 0.99, 0.99, 0.96, 0.33, 0.13};  
-
-    G4double energymirror2[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};   // 
-    G4double pp[2] = {2.038*eV, 4.144*eV};
-    G4double reflectivity2[2] ={1., 1.};  
-    G4double specularlobe[2] = {0.3, 0.3};
-    G4double specularspike[2] = {0.2, 0.2};
-    G4double backscatter[2] = {0.1, 0.1};
-
-    G4MaterialPropertiesTable *mptMirror = new G4MaterialPropertiesTable();
-    mptMirror->AddProperty("REFLECTIVITY", energymirror0, reflectivity0,34); // fraction of the light reflected (all=1)
-    //mptMirror->AddProperty("SPECULARLOBECONSTANT", pp, specularlobe,2); 
-    //mptMirror->AddProperty("SPECULARSPIKECONSTANT", pp, specularspike,2); 
-    //mptMirror->AddProperty("BACKSCATTERCONSTANT", pp, backscatter,2); 
-    mptMirror->AddProperty("RINDEX", RTV_ene, RTV_RINDEX,numRTV); // fraction of the light reflected (all=1)
-
-    // Surface
-    mirrorSurface = new G4OpticalSurface("mirrorSurface");
-    mirrorSurface -> SetMaterialPropertiesTable(mptMirror);
-    mirrorSurface -> SetType(dielectric_metal);
-    mirrorSurface -> SetFinish(polished);//-backpainted
-    mirrorSurface -> SetModel(unified);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // FR4 Interface  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Surface
-    G4double sigma_alpha = 0.1;
-    SurfFR4 = new G4OpticalSurface("SurfFR4");
-    SurfFR4 -> SetType(dielectric_dielectric);
-    SurfFR4 -> SetFinish(ground);
-    SurfFR4 -> SetModel(unified);
-    SurfFR4 -> SetSigmaAlpha(sigma_alpha);
-
-    G4double energyFR4S[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};   // 
-    G4double reflFR4S[2] ={0.5, 0.5};  
-    G4MaterialPropertiesTable *mptFR4S = new G4MaterialPropertiesTable();
-    //mptFR4S->AddProperty("TRANSMITTANCE", energyFR4S, reflFR4S,2); // fraction of the light reflected (all=1)
-    SurfFR4 -> SetMaterialPropertiesTable(mptFR4S);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // FR4 Interface  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Surface
-    G4double sigma_alpha2 = 0.1;
-    groundSurface = new G4OpticalSurface("LYSO_Glue_Surface");
-    //mirrorSurface -> SetMaterialPropertiesTable(mptMirror);
-    groundSurface -> SetType(dielectric_dielectric);
-    groundSurface -> SetFinish(polished);
-    groundSurface -> SetModel(unified);
-    groundSurface -> SetSigmaAlpha(sigma_alpha2);
-    G4double energyground[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};   // 
-    G4double reflground[2] ={0.88, 0.88};  
-    G4MaterialPropertiesTable *mptground = new G4MaterialPropertiesTable();
-    //mptground->AddProperty("TRANSMITTANCE", energyground, reflground,2); // fraction of the light reflected (all=1)
-    groundSurface -> SetMaterialPropertiesTable(mptground);
+    const G4int num = 13;
+    G4double targ_ene[num]   =  {1.3355*eV, 1.3455*eV, 1.3555*eV, 1.3655*eV, 1.3755*eV, 1.3485*eV, 1.3955*eV, 1.3455*eV, 1.4055*eV, 1.4155*eV, 1.4255*eV, 1.4355*eV, 1.4399*eV};
+    
+    // energy dependant refraction index
+    G4double targ_r[num] =  {3.5455, 3.5503, 3.5556, 3.5606, 3.5662, 3.5722, 3.5781, 3.5838, 3.5903, 3.5973, 3.6047, 3.6074};
+    
+    // decay energy spectrum
+    const G4int numB = 25;
+    G4double targ_ene_B[numB] = {0.*eV, 1.376126538455266*eV, 1.3718380461961193*eV, 1.3675102828173182*eV, 1.361397042023121*eV, 1.3562233034240718*eV, 1.3501574052199408*eV, 1.343281802519562*eV, 1.3364485006499873*eV, 1.3296572750498898*eV, 1.322081960475164*eV, 1.3154040548593424*eV, 1.308769922842405*eV, 1.3030009143524006*eV, 1.2972620456265476*eV, 1.2915813109075156*eV, 1.285940108140605*eV, 1.2795861872244307*eV, 1.274066336482496*eV, 1.2678217971373869*eV, 1.2616551181665188*eV, 1.2555626329466003*eV, 1.249545454513573*eV, 1.2435902898245625*eV, 0.*eV};
+    G4double intensity_B[numB]  =  {0., 0.78017353, 1.30689518, 1.68027887, 1.96692784, 2.26691418, 2.42689992, 2.58684386, 2.68010093, 2.70669206, 2.69325016, 2.63981705, 2.52636577, 2.37959197, 2.17944778, 1.99930964, 1.79253857, 1.64574386, 1.48563269, 1.31883192, 1.19871196, 1.11860411, 1.08517706, 1.06506647, 0.};
+    
+    const G4int numC = 20;
+    G4double targ_ene_C[numC] = {0.*eV, 1.2421121927867589*eV, 1.22969515476248*eV, 1.2175420921433509*eV, 1.205638033326529*eV, 1.193966680166632*eV, 1.1825318776659859*eV, 1.171297314120478*eV, 1.1602680189492196*eV, 1.1494343731465348*eV, 1.1387815031076187*eV, 1.1289375319609734*eV, 1.1186594012496678*eV, 1.10856494727968*eV, 1.0986453963655742*eV, 1.0888855358443152*eV, 1.0793046932338317*eV, 1.0704424351317727*eV, 1.06118891958056*eV, 0.*eV};
+    G4double intensity_C[numC]  =  {0., 1.0650455697814645, 1.0848634825173042, 1.1580099768872445, 1.264520805356763, 1.3777003196519493, 1.5308710439299007, 1.6306922816025113, 1.7105283667693594, 1.7570210228078695, 1.7368268205897035, 1.7299490850516326, 1.7097757878047073, 1.6829128997608738, 1.6360230492687973, 1.5291568362881929, 1.4489444616390186, 1.3820694586411797, 1.328531827294676, 0.};
+    
+    const G4int numD = 46;
+    G4double targ_ene_D[numD] = {0.*eV, 1.0590363149961763*eV, 1.0499915433844917*eV, 1.0411066899478856*eV, 1.0323658674098446*eV, 1.0237802307217656*eV, 1.015342539841102*eV, 1.0070521186910215*eV, 0.9989035510084632*eV, 0.9908888025380875*eV, 0.9829957985305847*eV, 0.9756813361203623*eV, 0.9680120138824387*eV, 0.96045532649805*eV, 0.9530294782928347*eV, 0.9457162778911276*eV, 0.9385077825321461*eV, 0.9314096054181311*eV, 0.924406276095999*eV, 0.9179014515589082*eV, 0.9110686494919132*eV, 0.9043405155864735*eV, 0.8977160310970833*eV, 0.891186611184669*eV, 0.8851381739942262*eV, 0.8787992600219292*eV, 0.8725446591012114*eV, 0.8663773093781172*eV, 0.8602897869213891*eV, 0.8542949844026524*eV, 0.8487309679189479*eV, 0.8428988950104308*eV, 0.8371485734669231*eV, 0.8314740596536633*eV, 0.8258800819377473*eV, 0.8206861402348788*eV, 0.8152349378031276*eV, 0.809856626220714*eV, 0.8045458900615358*eV, 0.799309247118479*eV, 0.7941422141098384*eV, 0.7893404979348808*eV, 0.7843012375965787*eV, 0.779329536759658*eV, 0.7761422431454008*eV, 0.*eV};
+    G4double intensity_D[numD]  =  {0., 1.3218213315265277, 1.3216331867853646, 1.3480988803756315, 1.354579421460136, 1.4010720774986463, 1.4742394768398268, 1.5873980861637726, 1.7339210295872969, 1.8937604396909158, 2.0269251064918645, 2.1534419924383856, 2.2132720201282314, 2.2397586186897387, 2.3329111705366814, 2.419415941529197, 2.4725772833933752, 2.53238640611198, 2.532198261370817, 2.485329315849981, 2.3251136162640353, 2.184883069183853, 2.071327265406341, 1.951102775803161, 1.8975860494278975, 1.830690141458818, 1.7304926143038817, 1.623605496352037, 1.4767062634461867, 1.3764878313200097, 1.2962963616420757, 1.2160839869929014, 1.1492089839950625, 1.0689966093458882, 1.0154589779993843, 0.9819274041298833, 0.9217210869577119, 0.868183455611208, 0.7946397667877015, 0.7544395070925329, 0.7275766190486994, 0.7073824168305336, 0.6805195287867002, 0.6803313840455372, 0.6535312109154247, 0.};
+    
+    // TO CORRECT	
+    // absorption length
+    G4double target_absene[18] = {1.5819*eV, 1.5872*eV, 1.592*eV, 1.597*eV, 1.6019*eV, 1.6073*eV, 1.6122*eV, 1.6171*eV, 1.6219*eV, 1.627*eV, 1.6319*eV, 1.6372*eV, 1.6421*eV, 1.6471*eV, 1.652*eV, 1.657*eV, 1.6619*eV, 1.6665*eV};
+    G4double target_absv2[18]   =  {0.91327*cm, 0.38512*cm, 0.1762*cm, 0.081546*cm, 0.038194*cm, 0.018746*cm, 0.009196*cm, 0.0047841*cm, 0.0027638*cm, 0.001489*cm, 0.00082111*cm, 0.00045814*cm, 0.00028392*cm, 0.00017803*cm, 0.00011426*cm, 0.000079579*cm, 0.00006378*cm, 0.00005809*cm};    
+    //attenuation length, average distance traveled by photon before it is scattered
+    G4double target_ene[2] = {1.239841939*eV/0.9,1.239841939*eV/0.2};
+    G4double target_scat[2] = {10.*m, 10.*m};
+    
+    
+    G4MaterialPropertiesTable *mptScint= new G4MaterialPropertiesTable();
+    
+    //properties  
+    mptScint->AddProperty("RINDEX", targ_ene, targ_r,num);
+    mptScint->AddConstProperty("SCINTILLATIONYIELD", TARGET_YIELD / keV);//Word data check
+    
+    // TO CORRECT
+    mptScint->AddProperty("ABSLENGTH", target_absene, target_absv2,2);
+    mptScint->AddProperty("RAYLEIGH", target_ene, target_scat,2);
+    mptScint->AddConstProperty("RESOLUTIONSCALE", LYSO_SCALERESOLUTION); //10%
+    
+    // Band B
+    mptScint->AddProperty("SCINTILLATIONCOMPONENT1", targ_ene_B, intensity_B, numB);
+    mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 250 * ns); // decay time constant
+    mptScint->AddConstProperty("SCINTILLATIONYIELD1", 0.333);//the fraction of photons in each component must be specified, all to component 1
+    mptScint->AddConstProperty("SCINTILLATIONRISETIME1", 8 * ns); // rise time
+    
+    // Band C
+    mptScint->AddProperty("SCINTILLATIONCOMPONENT2", targ_ene_C, intensity_C, numC);
+    mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT2", 300 * ns); // decay time constant
+    mptScint->AddConstProperty("SCINTILLATIONYIELD2", 0.283);
+    mptScint->AddConstProperty("SCINTILLATIONRISETIME2", 8 * ns); // rise time
+    
+    // Band D
+    mptScint->AddProperty("SCINTILLATIONCOMPONENT3", targ_ene_D, intensity_D, numD);
+    mptScint->AddConstProperty("SCINTILLATIONTIMECONSTANT3", 1500 * ns); // decay time constant
+    mptScint->AddConstProperty("SCINTILLATIONYIELD3", 0.384);
+    mptScint->AddConstProperty("SCINTILLATIONRISETIME3", 8 * ns); // rise time
+    
+    // set it to scintillator material
+    scintillator-> SetMaterialPropertiesTable(mptScint);    
 }
 
 G4VPhysicalVolume *MyDetectorConstruction::Construct()
 {
 ////////////////////
-// SOLID VOLUMES  // G4Box("var", width*m, lengtg*m, thickness*m);
+// SOLID VOLUMES  // G4Box("var", width*m, length*m, thickness*m);
 ////////////////////
 
     G4double xWorld = 0.1*m;    xWorld=xWorld/2.;
     G4double yWorld = 0.1*m;    yWorld=yWorld/2.;
     G4double zWorld = 0.1*m;    zWorld=zWorld/2.;
+    /*
     G4double DET_L = 0.3*mm;    DET_L=DET_L/2.;    
     G4double RESIN_W =6.5*mm;   RESIN_W=RESIN_W/2.;
     G4double RESIN_T =3.1*mm;RESIN_T=RESIN_T/2.;
     G4double FR4_L =0.8/2.*mm;     //FR4_L=FR4_L/2.;
     G4double DET_T =3.;DET_T=DET_T/2.;
+    */
 
     solidWorld = new G4Box("solidWorld", xWorld, yWorld, zWorld);
-    if(GeomConfig==1){
-        G4Trap* trapLYSO = new G4Trap("trapLYSO",       //G4String& pName,
-                                LYSO_L/2.*mm,0.,   //G4double pDz, G4double pTheta,
-                                0., LYSO_thick*mm,      //G4double pPhi, G4double pDy1,
-                            LYSO_thick*mm, LYSO_thick*mm,   //G4double pDx1, G4double pDx2,
-                            0.,LYSO_thick*mm*(1+perincr),               //G4double pAlp1, G4double pDy2,
-                            LYSO_thick*mm,LYSO_thick*mm,    //G4double pDx3, G4double pDx4,
-                            0.);            //G4double pAlp2)
-        G4ThreeVector positionTrap(0., 0., LYSO_L*mm);// translate 1/4L in -Z, already set in Z trap
-        G4RotationMatrix rotTrap  = G4RotationMatrix();// rotar 180 en Y
-        rotTrap.rotateY(M_PI*rad);
-        G4Transform3D transformTrap(rotTrap, positionTrap);
-        solidLYSO = new G4UnionSolid("solidLYSO", trapLYSO, trapLYSO, transformTrap);
-    solidGlue = new G4Box("solidGlue", DET_T*mm, DET_T*mm+0.2*mm*G4UniformRand(), GLUE_L*mm);
-    }
-    else if (GeomConfig==2)
-    {
-       G4Trap* trapLYSO1 = new G4Trap("trapLYSO",       //G4String& pName,
-                                LYSO_L/2.*mm,0.,   //G4double pDz, G4double pTheta,
-                                0., LYSO_thick*mm*(1+perincr),      //G4double pPhi, G4double pDy1,
-                            LYSO_thick*mm, LYSO_thick*mm,   //G4double pDx1, G4double pDx2,
-                            0.,LYSO_thick*mm,               //G4double pAlp1, G4double pDy2,
-                            LYSO_thick*mm,LYSO_thick*mm,    //G4double pDx3, G4double pDx4,
-                            0.);            //G4double pAlp2)
-       G4Trap* trapLYSO2 = new G4Trap("trapLYSO",       //G4String& pName,
-                                LYSO_L/2.*mm,0.,   //G4double pDz, G4double pTheta,
-                                0., LYSO_thick*mm,      //G4double pPhi, G4double pDy1,
-                            LYSO_thick*mm, LYSO_thick*mm,   //G4double pDx1, G4double pDx2,
-                            0.,LYSO_thick*mm,               //G4double pAlp1, G4double pDy2,
-                            LYSO_thick*mm,LYSO_thick*mm,    //G4double pDx3, G4double pDx4,
-                            0.);            //G4double pAlp2)
-        G4ThreeVector positionTrap(0., 0., LYSO_L*mm);// translate 1/4L in -Z, already set in Z trap
-        G4RotationMatrix rotTrap  = G4RotationMatrix();// rotar 180 en Y
-        rotTrap.rotateY(M_PI*rad);
-        G4Transform3D transformTrap(rotTrap, positionTrap);
-        solidLYSO = new G4UnionSolid("solidLYSO", trapLYSO1, trapLYSO2, transformTrap); 
-    solidGlue = new G4Box("solidGlue", RESIN_T*mm, RESIN_W*mm+0.2*mm*G4UniformRand(), GLUE_L*mm);
-    }
-
-
-    solidResin = new G4Box("solidResin", RESIN_T*mm, RESIN_W*mm, RESIN_L*mm);
-
-    solidDetector = new G4Box("solidDetector", DET_T*mm, DET_T*mm, DET_L);
-
-    G4ThreeVector position1(0, +0.5*mm+DET_T-RESIN_W, RESIN_L*mm);
-    G4RotationMatrix rotm  = G4RotationMatrix();
-    G4Transform3D transform(rotm, position1);
-    //G4Transform3D tr1 = G4Transform3D(rotm,position1);
-    G4Box* box = new G4Box("Box_1",RESIN_T*mm, RESIN_W*mm, RESIN_L*mm+DET_L);
-    G4SubtractionSolid* Resin_Sub =new G4SubtractionSolid("Resin_Sub", box, solidDetector, transform);
-
-    solidFR4 = new G4Box("solidFR4", RESIN_T*mm, RESIN_W*mm, FR4_L);
+    
+    //TO DO: FIX THE DIMENSIONS BY DIVIDING BY TWO
+    solidDetector = new G4Box("solidDetector", 1.*mm/2, 4.7*nm/2, 1.*mm/2);
+    solidTarget = new G4Box("solidTarget", 5.*mm/2, 0.625*mm/2, 5.*mm/2);
 
 
 ////////////////////
 // LOGIC VOLUMES  // G4LogicalVolume(solid_, material, "name");
 ////////////////////
-    logicDetector = new G4LogicalVolume(solidDetector, worldMat, "locigDetector"); // Defined outside in class
+    logicDetector = new G4LogicalVolume(solidDetector, SiO2, "locigDetector"); // Defined outside in class
 
-    logicLYSO = new G4LogicalVolume(solidLYSO, scintillator, "logicLYSO");
+    logicTarget = new G4LogicalVolume(solidTarget, scintillator, "logicTarget");
 
     logicWorld = new G4LogicalVolume(solidWorld, worldMat, "logicWorld");
 
-    logicGlue = new G4LogicalVolume(solidGlue, RTV3145, "logicGlue");
-
-    logicResin = new G4LogicalVolume(solidResin, EPOXY, "logicResin");
-
-    logicResin_Sub = new G4LogicalVolume(Resin_Sub, EPOXY, "logicResin");
-
-    logicFR4 = new G4LogicalVolume(solidFR4, SiO2, "logicFR4");
-
-    //G4LogicalSkinSurface *skinGlue = new G4LogicalSkinSurface("skin",logicGlue,SurfGlue);
-
-    G4LogicalSkinSurface *skinFR4 = new G4LogicalSkinSurface("skin",logicFR4,SurfFR4);
-   
- 
-    fScoringVolume = logicLYSO; fDetectorVolume=logicDetector;
 //////////////////////
 // PHYSICAL VOLUMES // G4PVPlacement(rotation,translation,logic_,"var",motherVolume,boolean,index if rep,check overlap);    
 //////////////////////
-
+    G4double dety = -0.02*m;
+    G4double spacing = 1*mm;
+    
     physWorld = new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicWorld,"physWorld",0,false,0,true);
+    physDetector = new G4PVPlacement(0,G4ThreeVector(0., dety-4.7*nm/2-0.625*mm/2-spacing, 0.),logicDetector,"physDetector",logicWorld,false,1,true); 
+    physTarget = new G4PVPlacement(0, G4ThreeVector(0., dety, 0.), logicTarget, "physTarget", logicWorld, false, 2, true);
 
-    physLYSO = new G4PVPlacement(0,G4ThreeVector(0.,0.,-LYSO_L/2.*mm),logicLYSO,"physLYSO",logicWorld,false,0,true);       
 
-if(GeomConfig == 1){
-    physGlue1 = new G4PVPlacement(0,G4ThreeVector(0.,0.,+1*(+LYSO_L*mm+GLUE_L*mm)),logicGlue,"physGlue1",logicWorld,false,0,true); 
-    physGlue2 = new G4PVPlacement(0,G4ThreeVector(0.,0.,-1*(+LYSO_L*mm+GLUE_L*mm)),logicGlue,"physGlue2",logicWorld,false,0,true); 
-G4RotationMatrix* rM = new G4RotationMatrix();
-  rM->rotateY(180.*deg);
-physResin1 = new G4PVPlacement(0     ,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-LYSO_thick),+1*(+LYSO_L*mm+GLUE_L*mm*2+RESIN_L*mm+DET_L)),logicResin_Sub,"physResin1",logicWorld,false,0,true); 
-physResin2 = new G4PVPlacement(rM,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-LYSO_thick),-1*(+LYSO_L*mm+GLUE_L*mm*2+RESIN_L*mm+DET_L)),logicResin_Sub,"physResin2",logicWorld,false,0,true); 
-    physDetector = new G4PVPlacement(0,G4ThreeVector(XposTol*mm,YposTol*mm,+1*(+LYSO_L*mm+RESIN_L*mm*2+2*GLUE_L*mm+DET_L)),logicDetector,"physDetector",logicWorld,false,0,true); 
-    physDetector = new G4PVPlacement(0,G4ThreeVector(XposTol*mm,YposTol*mm,-1*(+LYSO_L*mm+RESIN_L*mm*2+2*GLUE_L*mm+DET_L)),logicDetector,"physDetector",logicWorld,false,1,true); 
-
-physFR41 = new G4PVPlacement(0     ,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-LYSO_thick),+1*(+LYSO_L*mm+GLUE_L*mm*2+2*(RESIN_L*mm+DET_L)+FR4_L)),logicFR4,"physResin1",logicWorld,false,0,true); 
-physFR42 = new G4PVPlacement(rM,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-LYSO_thick),-1*(+LYSO_L*mm+GLUE_L*mm*2+2*(RESIN_L*mm+DET_L)+FR4_L)),logicFR4,"physResin2",logicWorld,false,0,true);
-}
-else if (GeomConfig == 2)
-{
-    physGlue1 = new G4PVPlacement   (0,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-DET_T),+1*(+LYSO_L*mm+GLUE_L*mm)),logicGlue,"physGlue1",logicWorld,false,0,true); 
-    physResin1 = new G4PVPlacement  (0,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-DET_T),+1*(+LYSO_L*mm+GLUE_L*mm*2+RESIN_L*mm+DET_L)),logicResin_Sub,"physResin1",logicWorld,false,0,true); 
-    physDetector = new G4PVPlacement(0,G4ThreeVector(XposTol*mm,YposTol*mm,+1*(+LYSO_L*mm+RESIN_L*mm*2+2*GLUE_L*mm+DET_L)),logicDetector,"physDetector",logicWorld,false,0,true); 
-    physFR41 = new G4PVPlacement    (0,G4ThreeVector(XposTol*mm,YposTol*mm+(RESIN_W-0.5*mm-DET_T),+1*(+LYSO_L*mm+GLUE_L*mm*2+2*(RESIN_L*mm+DET_L)+FR4_L)),logicFR4,"physResin1",logicWorld,false,0,true); 
-}
-//////////////////////
-// BORDER SURFACE //
-//////////////////////
-if(GeomConfig == 1){
-    if(ESRtrue==1){
-    G4LogicalBorderSurface *LYSO_Air_Border = new G4LogicalBorderSurface("LYSO_Glue_Border",physLYSO,physWorld,mirrorSurface);   
-    }
-    G4LogicalBorderSurface *Glue_Air_Border1 = new G4LogicalBorderSurface("Glue_Air_Border1",physGlue1,physWorld,groundSurface);   
-    G4LogicalBorderSurface *Glue_Air_Border2 = new G4LogicalBorderSurface("Glue_Air_Border2",physGlue2,physWorld,groundSurface);  
-    G4LogicalBorderSurface *Resin_Air_Border1 = new G4LogicalBorderSurface("Glue_Air_Border1",physResin1,physWorld,groundSurface);   
-    G4LogicalBorderSurface *Resin_Air_Border2 = new G4LogicalBorderSurface("Glue_Air_Border1",physResin2,physWorld,groundSurface);   
-    G4LogicalBorderSurface *Glue_LYSO_Border1 = new G4LogicalBorderSurface("Glue_LYSO_Border1",physGlue1,physLYSO,groundSurface);   
-    G4LogicalBorderSurface *Glue_LYSO_Border2 = new G4LogicalBorderSurface("Glue_LYSO_Border2",physGlue2,physLYSO,groundSurface);   
-    G4LogicalBorderSurface *Glue_Resin_Border1 = new G4LogicalBorderSurface("Glue_LYSO_Border1",physGlue1,physResin1,groundSurface);   
-    G4LogicalBorderSurface *Glue_Resin_Border2 = new G4LogicalBorderSurface("Glue_LYSO_Border2",physGlue2,physResin2,groundSurface); 
-}
-else if (GeomConfig == 2)
-{
-    if(ESRtrue==1){
-    G4LogicalBorderSurface *LYSO_Air_Border = new G4LogicalBorderSurface("LYSO_Glue_Border",physLYSO,physWorld,mirrorSurface);   
-    }
-    G4LogicalBorderSurface *Glue_Air_Border1 = new G4LogicalBorderSurface("Glue_Air_Border1",physGlue1,physWorld,groundSurface);   
-    G4LogicalBorderSurface *Resin_Air_Border1 = new G4LogicalBorderSurface("Glue_Air_Border1",physResin1,physWorld,groundSurface);   
-    G4LogicalBorderSurface *Glue_LYSO_Border1 = new G4LogicalBorderSurface("Glue_LYSO_Border1",physGlue1,physLYSO,groundSurface);   
-    G4LogicalBorderSurface *Glue_Resin_Border1 = new G4LogicalBorderSurface("Glue_LYSO_Border1",physGlue1,physResin1,groundSurface);   
-
-}  
-
-//////////////////////
-//  //
-//////////////////////
     ConstructSDandField();
-
-  G4double maxStep = 0.1*LYSO_thick*mm;
-  fStepLimit = new G4UserLimits(maxStep);
-  logicWorld->SetUserLimits(fStepLimit);
-  logicLYSO->SetUserLimits(fStepLimit);
 
 //RETURN//
     return physWorld;
@@ -482,11 +248,4 @@ MySensitiveDetector *sensDet = new MySensitiveDetector("SensitiveDetector", Vovc
 logicDetector->SetSensitiveDetector(sensDet);
 
 }
-
-
-
-
-
-
-
 

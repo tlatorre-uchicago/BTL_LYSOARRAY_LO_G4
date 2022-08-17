@@ -6,17 +6,18 @@ MyPrimaryGenerator :: MyPrimaryGenerator()
 
     // Add to constructor what we want to use in macro files or modify per event or it will be overwritten 
     G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
-    G4String particleName ="gamma";
+    G4String particleName ="e-";
     G4ParticleDefinition *particle = particleTable->FindParticle(particleName);
     
 
-        G4ThreeVector pos(0.*m,0.1*m,0.*m);
+        G4ThreeVector pos(0.*m,-0.02*m,0.*m);
         G4ThreeVector mom(0.,-1.,0.);
         fParticleGun->SetParticlePosition (pos);
         fParticleGun->SetParticleMomentumDirection (mom);
-        fParticleGun->SetParticleMomentum (511. *keV);
+        //fParticleGun->SetParticleMomentum (511. *keV);
+        fParticleGun->SetParticleMomentum (120. *keV);
         fParticleGun->SetParticleDefinition(particle);
-
+       
 }
 
 MyPrimaryGenerator::~MyPrimaryGenerator()
@@ -30,6 +31,7 @@ void MyPrimaryGenerator::GeneratePrimaries(G4Event *anEvent)
     G4ParticleDefinition *particle= fParticleGun->GetParticleDefinition();
 
     // Example for particle definition (not used in this executable)
+    /*
     if (particle == G4Geantino::Geantino())
     {
         // Cobalt particle
@@ -44,5 +46,6 @@ void MyPrimaryGenerator::GeneratePrimaries(G4Event *anEvent)
         fParticleGun->SetParticleCharge(charge);
 
     }
+    */
     fParticleGun->GeneratePrimaryVertex(anEvent);
 }

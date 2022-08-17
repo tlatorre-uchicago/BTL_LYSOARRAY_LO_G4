@@ -1,0 +1,3 @@
+# gun/momentumAmp amplitude energy_units
+/gun/momentumAmp {Amp} {ener}
+/run/beamOn 1000

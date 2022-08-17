@@ -66,25 +66,15 @@ void MyEventAction::BeginOfEventAction(const G4Event *anEvent)
     
 
     // Change of gun position between events depending on geometry (LYSO bar/tile)
-    if (GeomConfig == 1){
-        G4double GenX=(-LYSO_T+LYSO_T*2*G4UniformRand())/1000.;
-        G4double GenZ=(-LYSO_L+LYSO_L*2*G4UniformRand())/1000.;
-        command = "/gun/position "+std::to_string(GenX)+" 0.05 "+std::to_string(GenZ)+" m"; 
+        G4double GenX=(-0.005/2+0.005*G4UniformRand());
+        G4double GenZ=(-0.005/2+0.005*G4UniformRand());
+        //command = "/gun/position "+std::to_string(GenX)+" -0.02 "+std::to_string(GenZ)+" m";
+        command = "/gun/position "+std::to_string(0)+" -0.02 "+std::to_string(0)+" m"; 
         G4cout<< command << G4endl;
         UImanager->ApplyCommand(command);     
         command = "/gun/direction 0. -1. 0."; 
         G4cout<< command << G4endl;
         UImanager->ApplyCommand(command); 
-    }else if (GeomConfig == 2){
-        G4double GenX=(-LYSO_T+LYSO_T*2*G4UniformRand())/1000.;
-        G4double GenZ=(-LYSO_T+LYSO_T*2*G4UniformRand())/1000.;
-        command = "/gun/position "+std::to_string(GenX)+" "+std::to_string(GenZ)+" -0.05 "+"m"; 
-        G4cout<< command << G4endl;
-        UImanager->ApplyCommand(command);     
-        command = "/gun/direction 0. 0. 1."; 
-        G4cout<< command << G4endl;
-        UImanager->ApplyCommand(command); 
-    }
 
 
 // Write down data to screen if we are at a certain percentage of the total number of events
